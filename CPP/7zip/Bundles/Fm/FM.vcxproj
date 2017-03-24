@@ -22,6 +22,7 @@
     <SccProjectName />
     <SccLocalPath />
     <ProjectGuid>{3B449208-E9E6-4E7B-9687-12D4DF306914}</ProjectGuid>
+    <TargetName>7zFM</TargetName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseU|Win32'" Label="Configuration">
@@ -123,7 +124,6 @@
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>C:\Program Files\7-ZIP\7zFM.exe</OutputFile>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;comctl32.lib;Mpr.lib;htmlhelp.lib;Urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -166,7 +166,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>C:\Program Files\7-ZIP\7zFM.exe</OutputFile>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;comctl32.lib;Mpr.lib;htmlhelp.lib;Urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -210,7 +209,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>C:\Program Files\7-ZIP\7zFM.exe</OutputFile>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;comctl32.lib;Mpr.lib;htmlhelp.lib;Urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -251,7 +249,6 @@
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>C:\Program Files\7-ZIP\7zFM.exe</OutputFile>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;comctl32.lib;Mpr.lib;htmlhelp.lib;Urlmon.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
