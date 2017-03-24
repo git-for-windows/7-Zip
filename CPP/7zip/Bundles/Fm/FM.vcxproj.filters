@@ -1,0 +1,1344 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Spec">
+      <UniqueIdentifier>{3a523098-50fc-4c76-8864-9440cebac43f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archive">
+      <UniqueIdentifier>{744917da-5335-446b-b014-93f36bfc004a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archive\Archive Common">
+      <UniqueIdentifier>{31916cb1-0a08-4555-9b6e-718687241aed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archive\7z">
+      <UniqueIdentifier>{f436b12d-3aa1-4b88-9afd-08dca06e590e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Folders">
+      <UniqueIdentifier>{53adbb87-7b0c-4d12-9033-c6fdb3925d6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Registry">
+      <UniqueIdentifier>{45cd758f-5af2-4d09-ab29-cfc1426efddf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Panel">
+      <UniqueIdentifier>{2ba02e2b-52ff-4976-a38f-06142ca12f6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dialog">
+      <UniqueIdentifier>{ad7e7b9a-c314-4083-9f2d-0c303603fe91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dialog\Options">
+      <UniqueIdentifier>{2dba2c66-03e1-4b61-8a5e-a645629ec251}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FM Common">
+      <UniqueIdentifier>{b9f7fc8b-bedc-4ffd-9f85-d88c6bc9b28e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="7-Zip Common">
+      <UniqueIdentifier>{10151422-9a45-4506-882e-e0b9601ac37a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="C">
+      <UniqueIdentifier>{234d03a0-bd65-4f1d-a5c1-a019f4ad30ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{8ade36c4-1bb7-4185-9616-6c19dafc3259}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows\Control">
+      <UniqueIdentifier>{66f0cbd8-0b83-4291-b5fe-db5561482cf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{ec3ccbd4-9d36-4459-9467-29a3d5e24a27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{3e06f90a-a003-4cab-aa78-f6d487c10bed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\UI Common">
+      <UniqueIdentifier>{a77cc39d-24ee-4deb-91f3-60b22f71e43d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Agent">
+      <UniqueIdentifier>{35931316-766e-4b95-8868-1f4a6bbaae9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Explorer">
+      <UniqueIdentifier>{b28958d6-2023-4288-8db1-87b60722befe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\GUI">
+      <UniqueIdentifier>{f0597bec-dc43-4326-9240-c1044c78a868}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Compress">
+      <UniqueIdentifier>{5f862e80-6a9b-4b6a-a2d9-806569468e60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{8c7e7763-9188-4216-bd36-c4899bb58588}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\UI\FileManager\7zipLogo.ico">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\add.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Copy.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Delete.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Extract.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\FM.ico">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Move.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Parent.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Properties.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Test.bmp">
+      <Filter>Spec</Filter>
+    </Image>
+    <Image Include="..\..\UI\FileManager\Add2.bmp" />
+    <Image Include="..\..\UI\FileManager\Copy2.bmp" />
+    <Image Include="..\..\UI\FileManager\Delete2.bmp" />
+    <Image Include="..\..\UI\FileManager\Extract2.bmp" />
+    <Image Include="..\..\UI\FileManager\Info.bmp" />
+    <Image Include="..\..\UI\FileManager\Info2.bmp" />
+    <Image Include="..\..\UI\FileManager\Move2.bmp" />
+    <Image Include="..\..\UI\FileManager\Test2.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\UI\FileManager\ClassDefs.cpp">
+      <Filter>Spec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\StdAfx.cpp">
+      <Filter>Spec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\CoderMixer2.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\DummyOutStream.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\FindSignature.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\HandlerOut.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\InStreamWithCRC.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\ItemNameUtils.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\MultiStream.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\OutStreamWithCRC.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\Common\ParseProperties.cpp">
+      <Filter>Archive\Archive Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zCompressionMode.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zDecode.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zEncode.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zExtract.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zFolderInStream.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zHandler.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zHandlerOut.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zHeader.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zIn.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zOut.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zProperties.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zRegister.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zSpecStream.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Archive\7z\7zUpdate.cpp">
+      <Filter>Archive\7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\AltStreamsFolder.cpp">
+      <Filter>Folders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\FSDrives.cpp">
+      <Filter>Folders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\FSFolder.cpp">
+      <Filter>Folders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\FSFolderCopy.cpp">
+      <Filter>Folders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\NetFolder.cpp">
+      <Filter>Folders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\RootFolder.cpp">
+      <Filter>Folders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\RegistryAssociations.cpp">
+      <Filter>Registry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\RegistryPlugins.cpp">
+      <Filter>Registry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\RegistryUtils.cpp">
+      <Filter>Registry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\ViewSettings.cpp">
+      <Filter>Registry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\App.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\EnumFormatEtc.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\FileFolderPluginOpen.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\Panel.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelCopy.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelCrc.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelDrag.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelFolderChange.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelItemOpen.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelItems.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelKey.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelListNotify.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelMenu.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelOperations.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelSelect.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelSort.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PanelSplitFile.cpp">
+      <Filter>Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\EditPage.cpp">
+      <Filter>Dialog\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\FoldersPage.cpp">
+      <Filter>Dialog\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\LangPage.cpp">
+      <Filter>Dialog\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\MenuPage.cpp">
+      <Filter>Dialog\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\OptionsDialog.cpp">
+      <Filter>Dialog\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\SettingsPage.cpp">
+      <Filter>Dialog\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\SystemPage.cpp">
+      <Filter>Dialog\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\AboutDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\BrowseDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\ComboDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\CopyDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\LinkDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\ListViewDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\MessagesDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\OverwriteDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\PasswordDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\ProgressDialog2.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\SplitDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\ExtractCallback.cpp">
+      <Filter>FM Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\FormatUtils.cpp">
+      <Filter>FM Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\HelpUtils.cpp">
+      <Filter>FM Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\LangUtils.cpp">
+      <Filter>FM Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\ProgramLocation.cpp">
+      <Filter>FM Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\UpdateCallback100.cpp">
+      <Filter>FM Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\CreateCoder.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\CWrappers.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\FilePathAutoRename.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\FileStreams.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\InOutTempBuffer.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MethodProps.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\OutBuffer.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\ProgressUtils.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\PropId.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\StreamBinder.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\StreamObjects.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\StreamUtils.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\UniqBlocks.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\VirtThread.cpp">
+      <Filter>7-Zip Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\7zCrc.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\7zCrcOpt.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\Alloc.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\CpuArch.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\LzFind.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\LzFindMt.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\LzmaDec.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\LzmaEnc.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\Sha256.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\Sort.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\C\Threads.c">
+      <Filter>C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Control\ComboBox.cpp">
+      <Filter>Windows\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Control\Dialog.cpp">
+      <Filter>Windows\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Control\ListView.cpp">
+      <Filter>Windows\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Control\PropertyPage.cpp">
+      <Filter>Windows\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Control\Window2.cpp">
+      <Filter>Windows\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Clipboard.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\CommonDialog.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\DLL.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\ErrorMsg.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\FileDir.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\FileFind.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\FileIO.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\FileLink.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\FileName.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\FileSystem.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\MemoryGlobal.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\MemoryLock.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Menu.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Net.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\ProcessUtils.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\PropVariant.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\PropVariantConv.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Registry.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\ResourceString.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\SecurityUtils.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Shell.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Synchronization.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\System.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\TimeUtils.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Window.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\CommandLineParser.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\CRC.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\CrcReg.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\IntToString.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\Lang.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\LimitedStreams.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\ListFileUtils.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\MyString.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\MyVector.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\NewHandler.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\Random.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\Sha256Reg.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\StringConvert.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\StringToInt.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\UTFConvert.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\Wildcard.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\ArchiveCommandLine.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\ArchiveExtractCallback.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\ArchiveName.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\ArchiveOpenCallback.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\Bench.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\CompressCall2.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\DefaultName.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\EnumDirItems.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\Extract.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\ExtractingFilePath.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\FilterCoder.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\HashCalc.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\LoadCodecs.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\OpenArchive.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\PropIDUtils.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\SetProperties.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\SortUtils.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\TempFiles.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\Update.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\UpdateAction.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\UpdateCallback.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\UpdatePair.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\UpdateProduce.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\WorkDir.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Common\ZipRegistry.cpp">
+      <Filter>UI\UI Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Agent\Agent.cpp">
+      <Filter>UI\Agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Agent\AgentOut.cpp">
+      <Filter>UI\Agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Agent\AgentProxy.cpp">
+      <Filter>UI\Agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Agent\ArchiveFolder.cpp">
+      <Filter>UI\Agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Agent\ArchiveFolderOpen.cpp">
+      <Filter>UI\Agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Agent\ArchiveFolderOut.cpp">
+      <Filter>UI\Agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Agent\UpdateCallbackAgent.cpp">
+      <Filter>UI\Agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Explorer\ContextMenu.cpp">
+      <Filter>UI\Explorer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Explorer\MyMessages.cpp">
+      <Filter>UI\Explorer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\Explorer\RegistryContextMenu.cpp">
+      <Filter>UI\Explorer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\BenchmarkDialog.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\CompressDialog.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\ExtractDialog.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\ExtractGUI.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\HashGUI.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\UpdateCallbackGUI.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\UpdateCallbackGUI2.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\GUI\UpdateGUI.cpp">
+      <Filter>UI\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Compress\CopyCoder.cpp">
+      <Filter>Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Compress\CopyRegister.cpp">
+      <Filter>Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Compress\LzmaDecoder.cpp">
+      <Filter>Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Compress\LzmaEncoder.cpp">
+      <Filter>Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Compress\LzmaRegister.cpp">
+      <Filter>Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\FilePlugins.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\FM.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\MyLoadMenu.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\OpenCallback.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\PropertyName.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\SplitUtils.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\StringUtils.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\SysIconUtils.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\TextPairs.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc">
+      <Filter>Spec</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\UI\FileManager\StdAfx.h">
+      <Filter>Spec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\CoderMixer2.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\DummyOutStream.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\FindSignature.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\HandlerOut.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\InStreamWithCRC.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\ItemNameUtils.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\MultiStream.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\OutStreamWithCRC.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\Common\ParseProperties.h">
+      <Filter>Archive\Archive Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zCompressionMode.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zDecode.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zEncode.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zFolderInStream.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zHandler.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zHeader.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zIn.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zItem.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zOut.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zProperties.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zSpecStream.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\7z\7zUpdate.h">
+      <Filter>Archive\7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Archive\IArchive.h">
+      <Filter>Archive</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\AltStreamsFolder.h">
+      <Filter>Folders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\FSDrives.h">
+      <Filter>Folders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\FSFolder.h">
+      <Filter>Folders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\IFolder.h">
+      <Filter>Folders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\NetFolder.h">
+      <Filter>Folders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\RootFolder.h">
+      <Filter>Folders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\RegistryAssociations.h">
+      <Filter>Registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\RegistryPlugins.h">
+      <Filter>Registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\RegistryUtils.h">
+      <Filter>Registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ViewSettings.h">
+      <Filter>Registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\App.h">
+      <Filter>Panel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\AppState.h">
+      <Filter>Panel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\EnumFormatEtc.h">
+      <Filter>Panel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\FileFolderPluginOpen.h">
+      <Filter>Panel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\Panel.h">
+      <Filter>Panel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\EditPage.h">
+      <Filter>Dialog\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\FoldersPage.h">
+      <Filter>Dialog\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\LangPage.h">
+      <Filter>Dialog\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\MenuPage.h">
+      <Filter>Dialog\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\SettingsPage.h">
+      <Filter>Dialog\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\SystemPage.h">
+      <Filter>Dialog\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\AboutDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\BrowseDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ComboDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\CopyDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\DialogSize.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\LinkDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ListViewDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\MessagesDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\OverwriteDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\PasswordDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ProgressDialog2.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\SplitDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ExtractCallback.h">
+      <Filter>FM Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\FormatUtils.h">
+      <Filter>FM Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\HelpUtils.h">
+      <Filter>FM Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\LangUtils.h">
+      <Filter>FM Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ProgramLocation.h">
+      <Filter>FM Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\UpdateCallback100.h">
+      <Filter>FM Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\CreateCoder.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\CWrappers.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\FilePathAutoRename.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\FileStreams.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\InOutTempBuffer.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MethodProps.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\OutBuffer.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\ProgressUtils.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\StreamBinder.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\StreamObjects.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\StreamUtils.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\UniqBlocks.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\VirtThread.h">
+      <Filter>7-Zip Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\7zCrc.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\7zTypes.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\Alloc.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\CpuArch.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\LzFind.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\LzFindMt.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\LzmaDec.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\LzmaEnc.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\Sha256.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\Sort.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\C\Threads.h">
+      <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\ComboBox.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\CommandBar.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\Dialog.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\Edit.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\ImageList.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\ListView.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\ProgressBar.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\PropertyPage.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\ReBar.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\Static.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\StatusBar.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\ToolBar.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\Trackbar.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Control\Window2.h">
+      <Filter>Windows\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Clipboard.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\COM.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\CommonDialog.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Defs.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Device.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\DLL.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\ErrorMsg.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\FileDir.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\FileFind.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\FileIO.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\FileMapping.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\FileName.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\FileSystem.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Handle.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\MemoryGlobal.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\MemoryLock.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Menu.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Net.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\ProcessUtils.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\PropVariant.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\PropVariantConv.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Registry.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\ResourceString.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\SecurityUtils.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Shell.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Synchronization.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\System.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Thread.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\TimeUtils.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Window.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\CommandLineParser.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\Common.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\ComTry.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\Defs.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\DynamicBuffer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\Exception.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\IntToString.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\Lang.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\LimitedStreams.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\ListFileUtils.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\MyBuffer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\MyCom.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\MyString.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\MyVector.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\NewHandler.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\Random.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\StringConvert.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\StringToInt.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\Types.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\UTFConvert.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Common\Wildcard.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ArchiveCommandLine.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ArchiveExtractCallback.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ArchiveName.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ArchiveOpenCallback.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\Bench.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\CompressCall.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\DefaultName.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\DirItem.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\EnumDirItems.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ExitCode.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\Extract.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ExtractingFilePath.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ExtractMode.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\FilterCoder.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\HashCalc.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\IFileExtractCallback.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\LoadCodecs.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\OpenArchive.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\Property.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\PropIDUtils.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\SetProperties.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\SortUtils.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\StdAfx.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\TempFiles.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\Update.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\UpdateAction.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\UpdateCallback.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\UpdatePair.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\UpdateProduce.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\WorkDir.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Common\ZipRegistry.h">
+      <Filter>UI\UI Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Agent\Agent.h">
+      <Filter>UI\Agent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Agent\AgentProxy.h">
+      <Filter>UI\Agent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Agent\IFolderArchive.h">
+      <Filter>UI\Agent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Agent\UpdateCallbackAgent.h">
+      <Filter>UI\Agent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Explorer\ContextMenu.h">
+      <Filter>UI\Explorer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Explorer\MyMessages.h">
+      <Filter>UI\Explorer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\Explorer\RegistryContextMenu.h">
+      <Filter>UI\Explorer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\BenchmarkDialog.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\BenchmarkDialogRes.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\CompressDialog.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\ExtractDialog.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\ExtractGUI.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\HashGUI.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\UpdateCallbackGUI.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\UpdateCallbackGUI2.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\GUI\UpdateGUI.h">
+      <Filter>UI\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Compress\CopyCoder.h">
+      <Filter>Compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Compress\LzmaDecoder.h">
+      <Filter>Compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Compress\LzmaEncoder.h">
+      <Filter>Compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ICoder.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\IDecl.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\IPassword.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\IProgress.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\FilePlugins.h" />
+    <ClInclude Include="..\..\UI\FileManager\MyCom2.h" />
+    <ClInclude Include="..\..\UI\FileManager\MyLoadMenu.h" />
+    <ClInclude Include="..\..\UI\FileManager\OpenCallback.h" />
+    <ClInclude Include="..\..\UI\FileManager\PluginInterface.h" />
+    <ClInclude Include="..\..\UI\FileManager\PluginLoader.h" />
+    <ClInclude Include="..\..\UI\FileManager\PropertyName.h" />
+    <ClInclude Include="..\..\UI\FileManager\resource.h" />
+    <ClInclude Include="..\..\UI\FileManager\SplitUtils.h" />
+    <ClInclude Include="..\..\UI\FileManager\StringUtils.h" />
+    <ClInclude Include="..\..\UI\FileManager\SysIconUtils.h" />
+    <ClInclude Include="..\..\UI\FileManager\TextPairs.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\..\UI\FileManager\7zFM.exe.manifest" />
+  </ItemGroup>
+</Project>
