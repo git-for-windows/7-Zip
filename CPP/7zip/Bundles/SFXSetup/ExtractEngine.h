@@ -6,6 +6,6 @@
 #include "../../UI/Common/LoadCodecs.h"
 
 HRESULT ExtractArchive(CCodecs *codecs, const FString &fileName, const FString &destFolder,
-    bool showProgress, bool &isCorrupt, UString &errorMessage);
+    bool showProgress, const FString & extractDialogText, bool &isCorrupt, UString &errorMessage);
 
 #endif
