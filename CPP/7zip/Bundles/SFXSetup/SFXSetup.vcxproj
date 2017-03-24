@@ -55,19 +55,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseD|Win32'">
-    <OutDir>.\ReleaseD\</OutDir>
-    <IntDir>.\ReleaseD\</IntDir>
+    <OutDir>ReleaseD\</OutDir>
+    <IntDir>ReleaseD\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>7zSD</TargetName>
+    <TargetExt>.sfx</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\Debug\</OutDir>
-    <IntDir>.\Debug\</IntDir>
+    <OutDir>Debug\</OutDir>
+    <IntDir>Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>7zSfxS</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\Release\</OutDir>
-    <IntDir>.\Release\</IntDir>
+    <OutDir>Release\</OutDir>
+    <IntDir>Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>7zS</TargetName>
+    <TargetExt>.sfx</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseD|Win32'">
     <ClCompile>
@@ -106,7 +111,6 @@
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>C:\Util\7zSD.sfx</OutputFile>
       <AdditionalDependencies>comctl32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -149,7 +153,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>C:\UTIL\7zSfxS.exe</OutputFile>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -190,7 +193,6 @@
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>C:\Util\7zS.sfx</OutputFile>
       <AdditionalDependencies>comctl32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
