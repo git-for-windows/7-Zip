@@ -48,6 +48,9 @@
     <ResourceCompile Include="resource.rc">
       <Filter>Spec</Filter>
     </ResourceCompile>
+    <ResourceCompile Include="..\..\UI\FileManager\ExtractPathDialog.rc">
+      <Filter>File Manager</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StdAfx.cpp">
@@ -278,6 +281,12 @@
     <ClCompile Include="ExtractCallbackSfx.cpp" />
     <ClCompile Include="ExtractEngine.cpp" />
     <ClCompile Include="SfxSetup.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\ExtractPathDialog.cpp">
+      <Filter>File Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Windows\Shell.cpp">
+      <Filter>File Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="StdAfx.h">
@@ -468,6 +477,15 @@
     </ClInclude>
     <ClInclude Include="ExtractCallbackSfx.h" />
     <ClInclude Include="ExtractEngine.h" />
+    <ClInclude Include="..\..\UI\FileManager\ExtractPathDialog.h">
+      <Filter>File Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ExtractPathDialogRes.h">
+      <Filter>File Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Windows\Shell.h">
+      <Filter>File Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="setup.ico" />
