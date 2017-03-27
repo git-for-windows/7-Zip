@@ -188,6 +188,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
     UString progress = GetTextConfigValue(pairs, "Progress");
     extractDialogText = GetTextConfigValue(pairs, "ExtractDialogText");
     UString extractPathText = GetTextConfigValue(pairs, "ExtractPathText");
+    UString cancelPrompt = GetTextConfigValue(pairs, "CancelPrompt");
     if (progress.IsEqualTo_Ascii_NoCase("no"))
       showProgress = false;
     int index = FindTextConfigItem(pairs, "Directory");
@@ -211,14 +212,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
 
 	if (!extractPathText.IsEmpty() && !assumeYes)
     {
-      CExtractPathDialog extractPathDialog;
-	  extractPathDialog.Title = friendlyName;
-	  extractPathDialog.Prompt = installPrompt;
-	  extractPathDialog.Label = extractPathText;
-	  extractPathDialog.Value = extractPath;
-	  if (extractPathDialog.Create(NULL) != IDOK)
-			return 5;
-	  extractPath = extractPathDialog.Value;
+      for (;;) {
+        CExtractPathDialog extractPathDialog;
+	    extractPathDialog.Title = friendlyName;
+	    extractPathDialog.Prompt = installPrompt;
+	    extractPathDialog.Label = extractPathText;
+        extractPathDialog.Value = extractPath;
+        if (extractPathDialog.Create(NULL) != IDOK) {
+          if (!cancelPrompt.IsEmpty() &&
+              MessageBoxW(0, cancelPrompt, friendlyName, MB_YESNO | MB_DEFBUTTON2) == IDNO)
+            continue;
+          return 5;
+        }
+        extractPath = extractPathDialog.Value;
+	    break;
+      }
 	}
     else if (!installPrompt.IsEmpty() && !assumeYes)
     {
