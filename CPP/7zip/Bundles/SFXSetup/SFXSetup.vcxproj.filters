@@ -48,6 +48,9 @@
     <ResourceCompile Include="resource.rc">
       <Filter>Spec</Filter>
     </ResourceCompile>
+    <ResourceCompile Include="..\..\UI\FileManager\ExtractPathDialog.rc">
+      <Filter>File Manager</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StdAfx.cpp">
@@ -296,6 +299,9 @@
     <ClCompile Include="..\..\..\..\C\MtDec.c">
       <Filter>C</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\UI\FileManager\ExtractPathDialog.cpp">
+      <Filter>File Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="StdAfx.h">
@@ -503,6 +509,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\C\MtDec.h">
       <Filter>C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ExtractPathDialog.h">
+      <Filter>File Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UI\FileManager\ExtractPathDialogRes.h">
+      <Filter>File Manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
