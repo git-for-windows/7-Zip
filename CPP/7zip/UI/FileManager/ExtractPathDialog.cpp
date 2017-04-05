@@ -9,7 +9,6 @@
 
 #include "../../UI/FileManager/LangUtils.h"
 
-#include "BrowseDialog.h"
 #include "ExtractPathDialog.h"
 
 #ifdef LANG
