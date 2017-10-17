@@ -1,5 +1,7 @@
 # 7-Zip with an enhanced SFX component
 
+![alt text](http://www.7-zip.org/7ziplogo.png)
+
 For more than a decade now, Git for Windows made use of the "modified SFX" that used to be available from http://7zsfx.info. Sadly, that project seems to have gone defunct some time during 2016 and nobody seems to know why.
 
 Git for Windows used the "modified SFX" instead of the one shipped with [the official 7-Zip](http://7-zip.org/), for the following reasons:
@@ -16,3 +18,4 @@ Please note that this project does not aim for a full replacement of the "modifi
 * a *lot* of features are not reimplemented in this project, such as the `GUIMode`, the `GUIFlags`, or the `OverwriteMode` setting, just to name a few.
 
 Pull Requests implemented interesting and useful features are warmly welcome, of course!
+
