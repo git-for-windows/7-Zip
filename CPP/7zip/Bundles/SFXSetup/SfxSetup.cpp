@@ -155,6 +155,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
   NDLL::MyGetModuleFileName(fullPath);
 
   bool assumeYes = false;
+  UString installPath;
   for (;;)
   {
     switches.Trim();
@@ -162,6 +163,46 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
 		{
 			assumeYes = true;
 			switches = switches.Ptr(2);
+		}
+		else if (switches.IsPrefixedBy_Ascii_NoCase("-o") || switches.IsPrefixedBy_Ascii_NoCase("\"-o") || switches.IsPrefixedBy_Ascii_NoCase("-\"o"))
+		{
+			bool quoted = false;
+			
+			if (switches[0] == L'"')
+			{
+				quoted = true;
+				switches = switches.Ptr(3);
+			}
+			else
+			{
+				switches = switches.Ptr(2);
+				switches.Trim();
+			}
+
+
+			unsigned pos;
+			for (pos = 0; pos < switches.Len(); pos++)
+			{
+				wchar_t c = switches[pos];
+				if (c == L'"')
+				{
+					if (!quoted)
+						quoted = true;
+					else if (pos + 1 < switches.Len() && switches[pos + 1] == L'"')
+					{
+						installPath += L'"';
+						pos++;
+					}
+					else
+						quoted = false;
+					continue;
+				}
+
+				if (!quoted && (c == L' ' || c == L'\t'))
+					break;
+				installPath += switches[pos];
+			}
+			switches = switches.Ptr(pos);
 		}
 		else
 			break;
@@ -198,7 +239,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
     int index = FindTextConfigItem(pairs, "Directory");
     if (index >= 0)
       dirPrefix = pairs[index].String;
-	UString installPath = GetTextConfigValue(pairs, L"InstallPath");
+	if (installPath.IsEmpty())
+	  installPath = GetTextConfigValue(pairs, "InstallPath");
+
 	if (installPath.Find(L"%%S") >= 0)
 	{
 		FString s2 = fullPath;
