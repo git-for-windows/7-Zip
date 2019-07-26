@@ -157,14 +157,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
   FString fullPath;
   NDLL::MyGetModuleFileName(fullPath);
 
-  switches.Trim();
   bool assumeYes = false;
-  if (switches.IsPrefixedBy_Ascii_NoCase("-y"))
+  for (;;)
   {
-    assumeYes = true;
-    switches = switches.Ptr(2);
     switches.Trim();
-  }
+		if (switches.IsPrefixedBy_Ascii_NoCase("-y"))
+		{
+			assumeYes = true;
+			switches = switches.Ptr(2);
+		}
+		else
+			break;
+	}
 
   AString config;
   if (!ReadDataString(fullPath, kStartID, kEndID, config))
