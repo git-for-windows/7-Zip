@@ -156,7 +156,7 @@ void CPanel::SelectSpec(bool selectMode)
   CComboDialog dlg;
   LangString(selectMode ? IDS_SELECT : IDS_DESELECT, dlg.Title );
   LangString(IDS_SELECT_MASK, dlg.Static);
-  dlg.Value = L'*';
+  dlg.Value = '*';
   if (dlg.Create(GetParent()) != IDOK)
     return;
   const UString &mask = dlg.Value;
@@ -192,7 +192,7 @@ void CPanel::SelectByType(bool selectMode)
     }
     else
     {
-      UString mask = L'*';
+      UString mask ('*');
       mask += name.Ptr(pos);
       FOR_VECTOR (i, _selectedStatusVector)
         if (IsItem_Folder(i) == isItemFolder && DoesWildcardMatchName(mask, GetItemName(i)))
@@ -218,6 +218,8 @@ void CPanel::InvertSelection()
     FOR_VECTOR (i, _selectedStatusVector)
       if (_selectedStatusVector[i])
         numSelected++;
+    // 17.02: fixed : now we invert item even, if single item is selected
+    /*
     if (numSelected == 1)
     {
       int focused = _listView.GetFocusedItem();
@@ -229,6 +231,7 @@ void CPanel::InvertSelection()
             _selectedStatusVector[realIndex] = false;
       }
     }
+    */
   }
   FOR_VECTOR (i, _selectedStatusVector)
     _selectedStatusVector[i] = !_selectedStatusVector[i];

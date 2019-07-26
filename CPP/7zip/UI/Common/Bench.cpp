@@ -29,10 +29,7 @@
 #endif
 
 #include "../../../../C/7zCrc.h"
-#include "../../../../C/Alloc.h"
 #include "../../../../C/CpuArch.h"
-
-#include "../../../Windows/System.h"
 
 #ifndef _7ZIP_ST
 #include "../../../Windows/Synchronization.h"
@@ -49,6 +46,7 @@
 
 
 #include "../../../Common/IntToString.h"
+#include "../../../Common/MyBuffer2.h"
 #include "../../../Common/StringConvert.h"
 #include "../../../Common/StringToInt.h"
 
@@ -96,80 +94,33 @@ static const UInt32 kAdditionalSize = (1 << 16);
 static const UInt32 kCompressedAdditionalSize = (1 << 10);
 static const UInt32 kMaxLzmaPropSize = 5;
 
+
+
+#define ALLOC_WITH_HRESULT(_buffer_, _size_) \
+  (_buffer_)->Alloc(_size_); \
+  if (!(_buffer_)->IsAllocated()) return E_OUTOFMEMORY;
+
+
 class CBaseRandomGenerator
 {
   UInt32 A1;
   UInt32 A2;
+  UInt32 Salt;
 public:
-  CBaseRandomGenerator() { Init(); }
+  CBaseRandomGenerator(UInt32 salt = 0): Salt(salt) { Init(); }
   void Init() { A1 = 362436069; A2 = 521288629;}
   UInt32 GetRnd()
   {
-    return
+    return Salt ^
+    (
       ((A1 = 36969 * (A1 & 0xffff) + (A1 >> 16)) << 16) +
-      ((A2 = 18000 * (A2 & 0xffff) + (A2 >> 16)) );
+      ((A2 = 18000 * (A2 & 0xffff) + (A2 >> 16)) )
+    );
   }
 };
 
 
-static const unsigned kBufferAlignment = 1 << 4;
-
-struct CBenchBuffer
-{
-  size_t BufferSize;
-
-  #ifdef _WIN32
-
-  Byte *Buffer;
-
-  CBenchBuffer(): BufferSize(0), Buffer(NULL) {}
-  ~CBenchBuffer() { ::MidFree(Buffer); }
-  
-  void AllocAlignedMask(size_t size, size_t)
-  {
-    ::MidFree(Buffer);
-    BufferSize = 0;
-    Buffer = (Byte *)::MidAlloc(size);
-    if (Buffer)
-      BufferSize = size;
-  }
-  
-  #else
-  
-  Byte *Buffer;
-  Byte *_bufBase;
-
-  CBenchBuffer(): BufferSize(0), Buffer(NULL), _bufBase(NULL){}
-  ~CBenchBuffer() { ::MidFree(_bufBase); }
-  
-  void AllocAlignedMask(size_t size, size_t alignMask)
-  {
-    ::MidFree(_bufBase);
-    Buffer = NULL;
-    BufferSize = 0;
-    _bufBase = (Byte *)::MidAlloc(size + alignMask);
-    
-    if (_bufBase)
-    {
-      // Buffer = (Byte *)(((uintptr_t)_bufBase + alignMask) & ~(uintptr_t)alignMask);
-         Buffer = (Byte *)(((ptrdiff_t)_bufBase + alignMask) & ~(ptrdiff_t)alignMask);
-      BufferSize = size;
-    }
-  }
-
-  #endif
-
-  bool Alloc(size_t size)
-  {
-    if (Buffer && BufferSize == size)
-      return true;
-    AllocAlignedMask(size, kBufferAlignment - 1);
-    return (Buffer != NULL || size == 0);
-  }
-};
-
-
-class CBenchRandomGenerator: public CBenchBuffer
+class CBenchRandomGenerator: public CAlignedBuffer
 {
   static UInt32 GetVal(UInt32 &res, unsigned numBits)
   {
@@ -186,23 +137,22 @@ class CBenchRandomGenerator: public CBenchBuffer
 
 public:
   
-  void GenerateSimpleRandom(CBaseRandomGenerator *_RG_)
+  void GenerateSimpleRandom(UInt32 salt)
   {
-    CBaseRandomGenerator rg = *_RG_;
-    const size_t bufSize = BufferSize;
-    Byte *buf = Buffer;
+    CBaseRandomGenerator rg(salt);
+    const size_t bufSize = Size();
+    Byte *buf = (Byte *)*this;
     for (size_t i = 0; i < bufSize; i++)
       buf[i] = (Byte)rg.GetRnd();
-    *_RG_ = rg;
   }
 
-  void GenerateLz(unsigned dictBits, CBaseRandomGenerator *_RG_)
+  void GenerateLz(unsigned dictBits, UInt32 salt)
   {
-    CBaseRandomGenerator rg = *_RG_;
+    CBaseRandomGenerator rg(salt);
     UInt32 pos = 0;
     UInt32 rep0 = 1;
-    const size_t bufSize = BufferSize;
-    Byte *buf = Buffer;
+    const size_t bufSize = Size();
+    Byte *buf = (Byte *)*this;
     unsigned posBits = 1;
     
     while (pos < bufSize)
@@ -257,8 +207,6 @@ public:
           *dest++ = *src++;
       }
     }
-
-    *_RG_ = rg;
   }
 };
 
@@ -299,7 +247,7 @@ STDMETHODIMP CBenchmarkInStream::Read(void *data, UInt32 size, UInt32 *processed
   
 class CBenchmarkOutStream:
   public ISequentialOutStream,
-  public CBenchBuffer,
+  public CAlignedBuffer,
   public CMyUnknownImp
 {
   // bool _overflow;
@@ -327,13 +275,13 @@ public:
 
 STDMETHODIMP CBenchmarkOutStream::Write(const void *data, UInt32 size, UInt32 *processedSize)
 {
-  size_t curSize = BufferSize - Pos;
+  size_t curSize = Size() - Pos;
   if (curSize > size)
     curSize = size;
   if (curSize != 0)
   {
     if (RealCopy)
-      memcpy(Buffer + Pos, data, curSize);
+      memcpy(((Byte *)*this) + Pos, data, curSize);
     if (CalcCrc)
       Crc = CrcUpdate(Crc, data, curSize);
     Pos += curSize;
@@ -524,10 +472,9 @@ class CBenchProgressInfo:
 {
 public:
   CBenchProgressStatus *Status;
-  HRESULT Res;
   IBenchCallback *Callback;
 
-  CBenchProgressInfo(): Callback(0) {}
+  CBenchProgressInfo(): Callback(NULL) {}
   MY_UNKNOWN_IMP
   STDMETHOD(SetRatioInfo)(const UInt64 *inSize, const UInt64 *outSize);
 };
@@ -689,19 +636,38 @@ UInt64 GetDecompressRating(UInt64 elapsedTime, UInt64 freq, UInt64 outSize, UInt
   return props.GetDecompressRating(elapsedTime, freq, outSize, inSize, numIterations);
 }
 
+
+
+
+#ifndef _7ZIP_ST
+struct CBenchSyncCommon
+{
+  bool ExitMode;
+  NSynchronization::CManualResetEvent StartEvent;
+
+  CBenchSyncCommon(): ExitMode(false) {}
+};
+#endif
+
+
 struct CEncoderInfo;
 
 struct CEncoderInfo
 {
   #ifndef _7ZIP_ST
   NWindows::CThread thread[2];
+  NSynchronization::CManualResetEvent ReadyEvent;
   UInt32 NumDecoderSubThreads;
+  CBenchSyncCommon *Common;
   #endif
+
   CMyComPtr<ICompressCoder> _encoder;
   CMyComPtr<ICompressFilter> _encoderFilter;
   CBenchProgressInfo *progressInfoSpec[2];
   CMyComPtr<ICompressProgressInfo> progressInfo[2];
   UInt64 NumIterations;
+
+  UInt32 Salt;
 
   #ifdef USE_ALLOCA
   size_t AllocaSize;
@@ -741,26 +707,29 @@ struct CEncoderInfo
   const Byte *fileData;
   CBenchRandomGenerator rg;
 
-  CBenchBuffer rgCopy; // it must be 16-byte aligned !!!
+  CAlignedBuffer rgCopy; // it must be 16-byte aligned !!!
   CBenchmarkOutStream *propStreamSpec;
   CMyComPtr<ISequentialOutStream> propStream;
 
-  // for decode
+  unsigned generateDictBits;
   COneMethodInfo _method;
+  
+  // for decode
   size_t _uncompressedDataSize;
 
-  HRESULT Init(
-      const COneMethodInfo &method,
-      unsigned generateDictBits,
-      CBaseRandomGenerator *rg);
+  HRESULT Generate();
   HRESULT Encode();
   HRESULT Decode(UInt32 decoderIndex);
 
   CEncoderInfo():
+    #ifndef _7ZIP_ST
+    Common(NULL),
+    #endif
+    Salt(0),
     fileData(NULL),
     CheckCrc_Enc(true),
     CheckCrc_Dec(true),
-    outStreamSpec(0), callback(0), printCallback(0), propStreamSpec(0) {}
+    outStreamSpec(NULL), callback(NULL), printCallback(NULL), propStreamSpec(NULL) {}
 
   #ifndef _7ZIP_ST
   
@@ -775,14 +744,15 @@ struct CEncoderInfo
       #endif
 
       res = encoder->Encode();
-      encoder->Results[0] = res;
     }
     catch(...)
     {
       res = E_FAIL;
     }
+    encoder->Results[0] = res;
     if (res != S_OK)
       encoder->progressInfoSpec[0]->Status->SetResult(res);
+    encoder->ReadyEvent.Set();
     return 0;
   }
   
@@ -801,7 +771,12 @@ struct CEncoderInfo
 
   HRESULT CreateEncoderThread()
   {
-    return thread[0].Create(EncodeThreadFunction, this);
+    WRes res = 0;
+    if (!ReadyEvent.IsCreated())
+      res = ReadyEvent.Create();
+    if (res == 0)
+      res = thread[0].Create(EncodeThreadFunction, this);
+    return HRESULT_FROM_WIN32(res);
   }
 
   HRESULT CreateDecoderThread(unsigned index, bool callbackMode
@@ -826,11 +801,10 @@ struct CEncoderInfo
 };
 
 
-HRESULT CEncoderInfo::Init(
-    const COneMethodInfo &method,
-    unsigned generateDictBits,
-    CBaseRandomGenerator *rgLoc)
+HRESULT CEncoderInfo::Generate()
 {
+  const COneMethodInfo &method = _method;
+
   // we need extra space, if input data is already compressed
   const size_t kCompressedBufferSize =
       kCompressedAdditionalSize +
@@ -844,40 +818,39 @@ HRESULT CEncoderInfo::Init(
   
   if (!fileData)
   {
-    if (!rg.Alloc(kBufferSize))
-      return E_OUTOFMEMORY;
+    ALLOC_WITH_HRESULT(&rg, kBufferSize);
     
     // DWORD ttt = GetTickCount();
     if (generateDictBits == 0)
-      rg.GenerateSimpleRandom(rgLoc);
+      rg.GenerateSimpleRandom(Salt);
     else
-      rg.GenerateLz(generateDictBits, rgLoc);
+      rg.GenerateLz(generateDictBits, Salt);
     // printf("\n%d\n            ", GetTickCount() - ttt);
 
-    crc = CrcCalc(rg.Buffer, rg.BufferSize);
-    uncompressedDataPtr = rg.Buffer;
+    crc = CrcCalc((const Byte *)rg, rg.Size());
+    uncompressedDataPtr = (const Byte *)rg;
   }
   
   if (_encoderFilter)
   {
-    if (!rgCopy.Alloc(kBufferSize))
-      return E_OUTOFMEMORY;
+    ALLOC_WITH_HRESULT(&rgCopy, kBufferSize);
   }
 
 
-  outStreamSpec = new CBenchmarkOutStream;
-  outStream = outStreamSpec;
-  if (!outStreamSpec->Alloc(kCompressedBufferSize))
-    return E_OUTOFMEMORY;
+  if (!outStream)
+  {
+    outStreamSpec = new CBenchmarkOutStream;
+    outStream = outStreamSpec;
+  }
 
-  propStreamSpec = 0;
+  ALLOC_WITH_HRESULT(outStreamSpec, kCompressedBufferSize)
+
   if (!propStream)
   {
     propStreamSpec = new CBenchmarkOutStream;
     propStream = propStreamSpec;
   }
-  if (!propStreamSpec->Alloc(kMaxLzmaPropSize))
-    return E_OUTOFMEMORY;
+  ALLOC_WITH_HRESULT(propStreamSpec, kMaxLzmaPropSize);
   propStreamSpec->Init(true, false);
   
  
@@ -964,6 +937,28 @@ static void My_FilterBench(ICompressFilter *filter, Byte *data, size_t size)
 
 HRESULT CEncoderInfo::Encode()
 {
+  RINOK(Generate());
+
+  #ifndef _7ZIP_ST
+  if (Common)
+  {
+    Results[0] = S_OK;
+    WRes wres = ReadyEvent.Set();
+    if (wres == 0)
+      wres = Common->StartEvent.Lock();
+    if (wres != 0)
+      return HRESULT_FROM_WIN32(wres);
+    if (Common->ExitMode)
+      return S_OK;
+  }
+  else
+  #endif
+  {
+    CBenchProgressInfo *bpi = progressInfoSpec[0];
+    bpi->SetStartTime();
+  }
+
+
   CBenchInfo &bi = progressInfoSpec[0]->BenchInfo;
   bi.UnpackSize = 0;
   bi.PackSize = 0;
@@ -1000,10 +995,10 @@ HRESULT CEncoderInfo::Encode()
     
     if (_encoderFilter)
     {
-      memcpy(rgCopy.Buffer, uncompressedDataPtr, kBufferSize);
+      memcpy((Byte *)rgCopy, uncompressedDataPtr, kBufferSize);
       _encoderFilter->Init();
-      My_FilterBench(_encoderFilter, rgCopy.Buffer, kBufferSize);
-      RINOK(WriteStream(outStream, rgCopy.Buffer, kBufferSize));
+      My_FilterBench(_encoderFilter, (Byte *)rgCopy, kBufferSize);
+      RINOK(WriteStream(outStream, (const Byte *)rgCopy, kBufferSize));
     }
     else
     {
@@ -1081,7 +1076,7 @@ HRESULT CEncoderInfo::Decode(UInt32 decoderIndex)
   
   if (setDecProps)
   {
-    RINOK(setDecProps->SetDecoderProperties2(propStreamSpec->Buffer, (UInt32)propStreamSpec->Pos));
+    RINOK(setDecProps->SetDecoderProperties2((const Byte *)*propStreamSpec, (UInt32)propStreamSpec->Pos));
   }
 
   {
@@ -1109,7 +1104,7 @@ HRESULT CEncoderInfo::Decode(UInt32 decoderIndex)
       prev = pi->BenchInfo.UnpackSize;
     }
 
-    inStreamSpec->Init(outStreamSpec->Buffer, compressedSize);
+    inStreamSpec->Init((const Byte *)*outStreamSpec, compressedSize);
     crcOutStreamSpec->Init();
     
     UInt64 outSize = kBufferSize;
@@ -1117,12 +1112,12 @@ HRESULT CEncoderInfo::Decode(UInt32 decoderIndex)
     
     if (_decoderFilter)
     {
-      if (compressedSize > rgCopy.BufferSize)
+      if (compressedSize > rgCopy.Size())
         return E_FAIL;
-      memcpy(rgCopy.Buffer, outStreamSpec->Buffer, compressedSize);
+      memcpy((Byte *)rgCopy, (const Byte *)*outStreamSpec, compressedSize);
       _decoderFilter->Init();
-      My_FilterBench(_decoderFilter, rgCopy.Buffer, compressedSize);
-      RINOK(WriteStream(crcOutStream, rgCopy.Buffer, compressedSize));
+      My_FilterBench(_decoderFilter, (Byte *)rgCopy, compressedSize);
+      RINOK(WriteStream(crcOutStream, (const Byte *)rgCopy, compressedSize));
     }
     else
     {
@@ -1146,7 +1141,7 @@ static const UInt32 kNumThreadsMax = (1 << 12);
 struct CBenchEncoders
 {
   CEncoderInfo *encoders;
-  CBenchEncoders(UInt32 num): encoders(0) { encoders = new CEncoderInfo[num]; }
+  CBenchEncoders(UInt32 num): encoders(NULL) { encoders = new CEncoderInfo[num]; }
   ~CBenchEncoders() { delete []encoders; }
 };
 
@@ -1158,6 +1153,57 @@ static UInt64 GetNumIterations(UInt64 numCommands, UInt64 complexInCommands)
   UInt64 res = complexInCommands / numCommands;
   return (res == 0 ? 1 : res);
 }
+
+
+
+#ifndef _7ZIP_ST
+
+// ---------- CBenchThreadsFlusher ----------
+
+struct CBenchThreadsFlusher
+{
+  CBenchEncoders *EncodersSpec;
+  CBenchSyncCommon Common;
+  unsigned NumThreads;
+  bool NeedClose;
+
+  CBenchThreadsFlusher(): NumThreads(0), NeedClose(false) {}
+  
+  ~CBenchThreadsFlusher()
+  {
+    StartAndWait(true);
+  }
+
+  WRes StartAndWait(bool exitMode = false);
+};
+
+
+WRes CBenchThreadsFlusher::StartAndWait(bool exitMode)
+{
+  if (!NeedClose)
+    return 0;
+
+  Common.ExitMode = exitMode;
+  WRes res = Common.StartEvent.Set();
+
+  for (unsigned i = 0; i < NumThreads; i++)
+  {
+    NWindows::CThread &t = EncodersSpec->encoders[i].thread[0];
+    if (t.IsCreated())
+    {
+      WRes res2 = t.Wait();
+      if (res2 == 0)
+        res2 = t.Close();
+      if (res == S_OK)
+        res = res2;
+    }
+  }
+  NeedClose = false;
+  return res;
+}
+
+#endif
+
 
 
 static HRESULT MethodBench(
@@ -1185,9 +1231,11 @@ static HRESULT MethodBench(
   COneMethodInfo method = method2;
   UInt64 methodId;
   UInt32 numStreams;
-  if (!FindMethod(
+  int codecIndex = FindMethod_Index(
       EXTERNAL_CODECS_LOC_VARS
-      method.MethodName, methodId, numStreams))
+      method.MethodName, true,
+      methodId, numStreams);
+  if (codecIndex < 0)
     return E_NOTIMPL;
   if (numStreams != 1)
     return E_INVALIDARG;
@@ -1200,16 +1248,17 @@ static HRESULT MethodBench(
 
     if (oldLzmaBenchMode && methodId == k_LZMA)
     {
-      bool fixedNumber;
-      UInt32 numLzmaThreads = method.Get_Lzma_NumThreads(fixedNumber);
-      if (!fixedNumber && numThreads == 1)
+      if (numThreads == 1 && method.Get_NumThreads() < 0)
         method.AddProp_NumThreads(1);
+      const UInt32 numLzmaThreads = method.Get_Lzma_NumThreads();
       if (numThreads > 1 && numLzmaThreads > 1)
       {
         numEncoderThreads = numThreads / 2;
         numSubDecoderThreads = 2;
       }
     }
+
+  bool mtEncMode = (numEncoderThreads > 1);
   #endif
 
   CBenchEncoders encodersSpec(numEncoderThreads);
@@ -1225,7 +1274,7 @@ static HRESULT MethodBench(
 
     {
       CCreatedCoder cod;
-      RINOK(CreateCoder(EXTERNAL_CODECS_LOC_VARS methodId, true, encoder._encoderFilter, cod));
+      RINOK(CreateCoder_Index(EXTERNAL_CODECS_LOC_VARS codecIndex, true, encoder._encoderFilter, cod));
       encoder._encoder = cod.Coder;
       if (!encoder._encoder && !encoder._encoderFilter)
         return E_NOTIMPL;
@@ -1242,15 +1291,12 @@ static HRESULT MethodBench(
     {
       CCreatedCoder cod;
       CMyComPtr<ICompressCoder> &decoder = encoder._decoders[j];
-      RINOK(CreateCoder(EXTERNAL_CODECS_LOC_VARS methodId, false, encoder._decoderFilter, cod));
+      RINOK(CreateCoder_Id(EXTERNAL_CODECS_LOC_VARS methodId, false, encoder._decoderFilter, cod));
       decoder = cod.Coder;
       if (!encoder._decoderFilter && !decoder)
         return E_NOTIMPL;
     }
   }
-
-  CBaseRandomGenerator rg;
-  rg.Init();
 
   UInt32 crc = 0;
   if (fileData)
@@ -1260,22 +1306,38 @@ static HRESULT MethodBench(
   {
     CEncoderInfo &encoder = encoders[i];
     encoder._method = method;
+    encoder.generateDictBits = generateDictBits;
     encoder._uncompressedDataSize = uncompressedDataSize;
     encoder.kBufferSize = uncompressedDataSize;
     encoder.fileData = fileData;
     encoder.crc = crc;
-
-    RINOK(encoders[i].Init(method, generateDictBits, &rg));
   }
 
   CBenchProgressStatus status;
   status.Res = S_OK;
   status.EncodeMode = true;
 
+  #ifndef _7ZIP_ST
+  CBenchThreadsFlusher encoderFlusher;
+  if (mtEncMode)
+  {
+    WRes wres = encoderFlusher.Common.StartEvent.Create();
+    if (wres != 0)
+      return HRESULT_FROM_WIN32(wres);
+    encoderFlusher.NumThreads = numEncoderThreads;
+    encoderFlusher.EncodersSpec = &encodersSpec;
+    encoderFlusher.NeedClose = true;
+  }
+  #endif
+
   for (i = 0; i < numEncoderThreads; i++)
   {
     CEncoderInfo &encoder = encoders[i];
     encoder.NumIterations = GetNumIterations(benchProps->GeComprCommands(uncompressedDataSize), complexInCommands);
+    encoder.Salt = g_CrcTable[i & 0xFF];
+    encoder.Salt ^= (g_CrcTable[(i >> 8) & 0xFF] << 3);
+    // (g_CrcTable[0] == 0), and (encoder.Salt == 0) for first thread
+    // printf(" %8x", encoder.Salt);
 
     for (int j = 0; j < 2; j++)
     {
@@ -1290,30 +1352,50 @@ static HRESULT MethodBench(
       CBenchProgressInfo *bpi = encoder.progressInfoSpec[0];
       bpi->Callback = callback;
       bpi->BenchInfo.NumIterations = numEncoderThreads;
-      bpi->SetStartTime();
     }
 
     #ifndef _7ZIP_ST
-    if (numEncoderThreads > 1)
+    if (mtEncMode)
     {
       #ifdef USE_ALLOCA
       encoder.AllocaSize = (i * 16 * 21) & 0x7FF;
       #endif
 
+      encoder.Common = &encoderFlusher.Common;
       RINOK(encoder.CreateEncoderThread())
     }
-    else
     #endif
-    {
-      RINOK(encoder.Encode());
-    }
   }
-  
+
+  if (printCallback)
+  {
+    RINOK(printCallback->CheckBreak());
+  }
+
   #ifndef _7ZIP_ST
-  if (numEncoderThreads > 1)
+  if (mtEncMode)
+  {
     for (i = 0; i < numEncoderThreads; i++)
-      encoders[i].thread[0].Wait();
+    {
+      CEncoderInfo &encoder = encoders[i];
+      WRes wres = encoder.ReadyEvent.Lock();
+      if (wres != 0)
+        return HRESULT_FROM_WIN32(wres);
+      RINOK(encoder.Results[0]);
+    }
+
+    CBenchProgressInfo *bpi = encoders[0].progressInfoSpec[0];
+    bpi->SetStartTime();
+
+    WRes wres = encoderFlusher.StartAndWait();
+    if (status.Res == 0 && wres != 0)
+      return HRESULT_FROM_WIN32(wres);
+  }
+  else
   #endif
+  {
+    RINOK(encoders[0].Encode());
+  }
 
   RINOK(status.Res);
 
@@ -1329,10 +1411,15 @@ static HRESULT MethodBench(
     CEncoderInfo &encoder = encoders[i];
     info.UnpackSize += encoder.kBufferSize;
     info.PackSize += encoder.compressedSize;
+    // printf("\n%7d\n", encoder.compressedSize);
   }
   
   RINOK(callback->SetEncodeResult(info, true));
 
+
+
+
+  // ---------- Decode ----------
 
   status.Res = S_OK;
   status.EncodeMode = false;
@@ -1546,7 +1633,7 @@ struct CFreqThreads
   CFreqInfo *Items;
   UInt32 NumThreads;
 
-  CFreqThreads(): Items(0), NumThreads(0) {}
+  CFreqThreads(): Items(NULL), NumThreads(0) {}
   void WaitAll()
   {
     for (UInt32 i = 0; i < NumThreads; i++)
@@ -1604,7 +1691,7 @@ struct CCrcThreads
   CCrcInfo *Items;
   UInt32 NumThreads;
 
-  CCrcThreads(): Items(0), NumThreads(0) {}
+  CCrcThreads(): Items(NULL), NumThreads(0) {}
   void WaitAll()
   {
     for (UInt32 i = 0; i < NumThreads; i++)
@@ -1620,21 +1707,21 @@ struct CCrcThreads
 
 #endif
 
-static UInt32 CrcCalc1(const Byte *buf, UInt32 size)
+static UInt32 CrcCalc1(const Byte *buf, size_t size)
 {
   UInt32 crc = CRC_INIT_VAL;;
-  for (UInt32 i = 0; i < size; i++)
+  for (size_t i = 0; i < size; i++)
     crc = CRC_UPDATE_BYTE(crc, buf[i]);
   return CRC_GET_DIGEST(crc);
 }
 
-static void RandGen(Byte *buf, UInt32 size, CBaseRandomGenerator &RG)
+static void RandGen(Byte *buf, size_t size, CBaseRandomGenerator &RG)
 {
-  for (UInt32 i = 0; i < size; i++)
+  for (size_t i = 0; i < size; i++)
     buf[i] = (Byte)RG.GetRnd();
 }
 
-static UInt32 RandGenCrc(Byte *buf, UInt32 size, CBaseRandomGenerator &RG)
+static UInt32 RandGenCrc(Byte *buf, size_t size, CBaseRandomGenerator &RG)
 {
   RandGen(buf, size, RG);
   return CrcCalc1(buf, size);
@@ -1642,14 +1729,15 @@ static UInt32 RandGenCrc(Byte *buf, UInt32 size, CBaseRandomGenerator &RG)
 
 bool CrcInternalTest()
 {
-  CBenchBuffer buffer;
-  const UInt32 kBufferSize0 = (1 << 8);
-  const UInt32 kBufferSize1 = (1 << 10);
-  const UInt32 kCheckSize = (1 << 5);
-  if (!buffer.Alloc(kBufferSize0 + kBufferSize1))
+  CAlignedBuffer buffer;
+  const size_t kBufferSize0 = (1 << 8);
+  const size_t kBufferSize1 = (1 << 10);
+  const unsigned kCheckSize = (1 << 5);
+  buffer.Alloc(kBufferSize0 + kBufferSize1);
+  if (!buffer.IsAllocated())
     return false;
-  Byte *buf = buffer.Buffer;
-  UInt32 i;
+  Byte *buf = (Byte *)buffer;
+  size_t i;
   for (i = 0; i < kBufferSize0; i++)
     buf[i] = (Byte)i;
   UInt32 crc1 = CrcCalc1(buf, kBufferSize0);
@@ -1658,7 +1746,7 @@ bool CrcInternalTest()
   CBaseRandomGenerator RG;
   RandGen(buf + kBufferSize0, kBufferSize1, RG);
   for (i = 0; i < kBufferSize0 + kBufferSize1 - kCheckSize; i++)
-    for (UInt32 j = 0; j < kCheckSize; j++)
+    for (unsigned j = 0; j < kCheckSize; j++)
       if (CrcCalc1(buf + i, j) != CrcCalc(buf + i, j))
         return false;
   return true;
@@ -1858,6 +1946,84 @@ static void PrintTotals(IBenchPrintCallback &f, bool showFreq, UInt64 cpuFreq, c
   PrintResults(f, res.Usage / numIterations2, res.RPU / numIterations2, res.Rating / numIterations2, showFreq, cpuFreq);
 }
 
+
+static void PrintHex(AString &s, UInt64 v)
+{
+  char temp[32];
+  ConvertUInt64ToHex(v, temp);
+  s += temp;
+}
+
+AString GetProcessThreadsInfo(const NSystem::CProcessAffinity &ti)
+{
+  AString s;
+  // s.Add_UInt32(ti.numProcessThreads);
+  if (ti.processAffinityMask != ti.systemAffinityMask)
+  {
+    // if (ti.numProcessThreads != ti.numSysThreads)
+    {
+      s += " / ";
+      s.Add_UInt32(ti.GetNumSystemThreads());
+    }
+    s += " : ";
+    PrintHex(s, ti.processAffinityMask);
+    s += " / ";
+    PrintHex(s, ti.systemAffinityMask);
+  }
+  return s;
+}
+
+
+static void PrintSize(AString &s, UInt64 v)
+{
+  char c = 0;
+  if ((v & 0x3FF) == 0) { v >>= 10; c = 'K';
+  if ((v & 0x3FF) == 0) { v >>= 10; c = 'M';
+  if ((v & 0x3FF) == 0) { v >>= 10; c = 'G';
+  if ((v & 0x3FF) == 0) { v >>= 10; c = 'T';
+  }}}}
+  else
+  {
+    PrintHex(s, v);
+    return;
+  }
+  char temp[32];
+  ConvertUInt64ToString(v, temp);
+  s += temp;
+  if (c)
+    s += c;
+}
+
+
+#ifdef _7ZIP_LARGE_PAGES
+
+extern bool g_LargePagesMode;
+
+extern "C"
+{
+  extern SIZE_T g_LargePageSize;
+}
+
+void Add_LargePages_String(AString &s)
+{
+  if (g_LargePagesMode || g_LargePageSize != 0)
+  {
+    s += " (LP-";
+    PrintSize(s, g_LargePageSize);
+    #ifdef MY_CPU_X86_OR_AMD64
+    if (CPU_IsSupported_PageGB())
+      s += "-1G";
+    #endif
+    if (!g_LargePagesMode)
+      s += "-NA";
+    s += ")";
+  }
+}
+
+#endif
+
+
+
 static void PrintRequirements(IBenchPrintCallback &f, const char *sizeString,
     bool size_Defined, UInt64 size, const char *threadsString, UInt32 numThreads)
 {
@@ -1867,11 +2033,22 @@ static void PrintRequirements(IBenchPrintCallback &f, const char *sizeString,
     PrintNumber(f, (size >> 20), 6);
   else
     f.Print("      ?");
-  f.Print(" MB,  # ");
+  f.Print(" MB");
+  
+  #ifdef _7ZIP_LARGE_PAGES
+  {
+    AString s;
+    Add_LargePages_String(s);
+    f.Print(s);
+  }
+  #endif
+  
+  f.Print(",  # ");
   f.Print(threadsString);
   PrintNumber(f, numThreads, 3);
-  f.NewLine();
 }
+
+
 
 struct CBenchCallbackToPrint: public IBenchCallback
 {
@@ -1930,7 +2107,7 @@ HRESULT CBenchCallbackToPrint::SetEncodeResult(const CBenchInfo &info, bool fina
   return S_OK;
 }
 
-static const char *kSep = "  | ";
+static const char * const kSep = "  | ";
 
 HRESULT CBenchCallbackToPrint::SetDecodeResult(const CBenchInfo &info, bool final)
 {
@@ -2147,7 +2324,7 @@ static HRESULT CrcBench(
   numThreads = 1;
   #endif
 
-  AString methodName = method.MethodName;
+  const AString &methodName = method.MethodName;
   // methodName.RemoveChar(L'-');
   CMethodId hashID;
   if (!FindHashMethod(
@@ -2155,14 +2332,13 @@ static HRESULT CrcBench(
       methodName, hashID))
     return E_NOTIMPL;
 
-  CBenchBuffer buffer;
+  CAlignedBuffer buffer;
   size_t totalSize = (size_t)bufferSize * numThreads;
   if (totalSize / numThreads != bufferSize)
     return E_OUTOFMEMORY;
-  if (!buffer.Alloc(totalSize))
-    return E_OUTOFMEMORY;
+  ALLOC_WITH_HRESULT(&buffer, totalSize)
 
-  Byte *buf = buffer.Buffer;
+  Byte *buf = (Byte *)buffer;
   CBaseRandomGenerator RG;
   UInt32 bsize = (bufferSize == 0 ? 1 : bufferSize);
   UInt64 numIterations = complexInCommands * 256 / complexity / bsize;
@@ -2344,15 +2520,7 @@ static UInt32 GetNumThreadsNext(unsigned i, UInt32 numThreads)
 
 static bool AreSameMethodNames(const char *fullName, const char *shortName)
 {
-  for (;;)
-  {
-    char c2 = *shortName++;
-    if (c2 == 0)
-      return true;
-    char c1 = *fullName++;
-    if (MyCharLower_Ascii(c1) != MyCharLower_Ascii(c2))
-      return false;
-  }
+  return StringsAreEqualNoCase_Ascii(fullName, shortName);
 }
 
 
@@ -2410,6 +2578,226 @@ static void x86cpuid_to_String(const Cx86cpuid &c, AString &s)
 #endif
 
 
+
+static const char * const k_PROCESSOR_ARCHITECTURE[] =
+{
+    "x86" // "INTEL"
+  , "MIPS"
+  , "ALPHA"
+  , "PPC"
+  , "SHX"
+  , "ARM"
+  , "IA64"
+  , "ALPHA64"
+  , "MSIL"
+  , "x64" // "AMD64"
+  , "IA32_ON_WIN64"
+  , "NEUTRAL"
+  , "ARM64"
+  , "ARM32_ON_WIN64"
+};
+
+#define MY__PROCESSOR_ARCHITECTURE_INTEL 0
+#define MY__PROCESSOR_ARCHITECTURE_AMD64 9
+
+
+#define MY__PROCESSOR_INTEL_PENTIUM  586
+#define MY__PROCESSOR_AMD_X8664      8664
+
+/*
+static const CUInt32PCharPair k_PROCESSOR[] =
+{
+  { 2200, "IA64" },
+  { 8664, "x64" }
+};
+
+#define PROCESSOR_INTEL_386      386
+#define PROCESSOR_INTEL_486      486
+#define PROCESSOR_INTEL_PENTIUM  586
+#define PROCESSOR_INTEL_860      860
+#define PROCESSOR_INTEL_IA64     2200
+#define PROCESSOR_AMD_X8664      8664
+#define PROCESSOR_MIPS_R2000     2000
+#define PROCESSOR_MIPS_R3000     3000
+#define PROCESSOR_MIPS_R4000     4000
+#define PROCESSOR_ALPHA_21064    21064
+#define PROCESSOR_PPC_601        601
+#define PROCESSOR_PPC_603        603
+#define PROCESSOR_PPC_604        604
+#define PROCESSOR_PPC_620        620
+#define PROCESSOR_HITACHI_SH3    10003
+#define PROCESSOR_HITACHI_SH3E   10004
+#define PROCESSOR_HITACHI_SH4    10005
+#define PROCESSOR_MOTOROLA_821   821
+#define PROCESSOR_SHx_SH3        103
+#define PROCESSOR_SHx_SH4        104
+#define PROCESSOR_STRONGARM      2577    // 0xA11
+#define PROCESSOR_ARM720         1824    // 0x720
+#define PROCESSOR_ARM820         2080    // 0x820
+#define PROCESSOR_ARM920         2336    // 0x920
+#define PROCESSOR_ARM_7TDMI      70001
+#define PROCESSOR_OPTIL          18767   // 0x494f
+*/
+
+#ifdef _WIN32
+
+static const char * const k_PF[] =
+{
+    "FP_ERRATA"
+  , "FP_EMU"
+  , "CMPXCHG"
+  , "MMX"
+  , "PPC_MOVEMEM_64BIT"
+  , "ALPHA_BYTE"
+  , "SSE"
+  , "3DNOW"
+  , "RDTSC"
+  , "PAE"
+  , "SSE2"
+  , "SSE_DAZ"
+  , "NX"
+  , "SSE3"
+  , "CMPXCHG16B"
+  , "CMP8XCHG16"
+  , "CHANNELS"
+  , "XSAVE"
+  , "ARM_VFP_32"
+  , "ARM_NEON"
+  , "L2AT"
+  , "VIRT_FIRMWARE"
+  , "RDWRFSGSBASE"
+  , "FASTFAIL"
+  , "ARM_DIVIDE"
+  , "ARM_64BIT_LOADSTORE_ATOMIC"
+  , "ARM_EXTERNAL_CACHE"
+  , "ARM_FMAC"
+  , "RDRAND"
+  , "ARM_V8"
+  , "ARM_V8_CRYPTO"
+  , "ARM_V8_CRC32"
+  , "RDTSCP"
+};
+
+#endif
+
+
+
+
+static void PrintPage(AString &s, UInt32 v)
+{
+  if ((v & 0x3FF) == 0)
+  {
+    s.Add_UInt32(v >> 10);
+    s += "K";
+  }
+  else
+    s.Add_UInt32(v >> 10);
+}
+
+static AString TypeToString2(const char * const table[], unsigned num, UInt32 value)
+{
+  char sz[16];
+  const char *p = NULL;
+  if (value < num)
+    p = table[value];
+  if (!p)
+  {
+    ConvertUInt32ToString(value, sz);
+    p = sz;
+  }
+  return (AString)p;
+}
+
+#ifdef _WIN32
+
+static void SysInfo_To_String(AString &s, const SYSTEM_INFO &si)
+{
+  s += TypeToString2(k_PROCESSOR_ARCHITECTURE, ARRAY_SIZE(k_PROCESSOR_ARCHITECTURE), si.wProcessorArchitecture);
+
+  if (!(   si.wProcessorArchitecture == MY__PROCESSOR_ARCHITECTURE_INTEL && si.dwProcessorType == MY__PROCESSOR_INTEL_PENTIUM
+      || si.wProcessorArchitecture == MY__PROCESSOR_ARCHITECTURE_AMD64 && si.dwProcessorType == MY__PROCESSOR_AMD_X8664))
+  {
+    s += " ";
+    // s += TypePairToString(k_PROCESSOR, ARRAY_SIZE(k_PROCESSOR), si.dwProcessorType);
+    s.Add_UInt32(si.dwProcessorType);
+  }
+  s += " ";
+  PrintHex(s, si.wProcessorLevel);
+  s += ".";
+  PrintHex(s, si.wProcessorRevision);
+  if ((UInt64)si.dwActiveProcessorMask + 1 != ((UInt64)1 << si.dwNumberOfProcessors))
+  if ((UInt64)si.dwActiveProcessorMask + 1 != 0 || si.dwNumberOfProcessors != sizeof(UInt64) * 8)
+  {
+    s += " act:";
+    PrintHex(s, si.dwActiveProcessorMask);
+  }
+  s += " cpus:";
+  s.Add_UInt32(si.dwNumberOfProcessors);
+  if (si.dwPageSize != 1 << 12)
+  {
+    s += " page:";
+    PrintPage(s, si.dwPageSize);
+  }
+  if (si.dwAllocationGranularity != 1 << 16)
+  {
+    s += " gran:";
+    PrintPage(s, si.dwAllocationGranularity);
+  }
+  s += " ";
+
+  DWORD_PTR minAdd = (DWORD_PTR)si.lpMinimumApplicationAddress;
+  UInt64 maxSize = (UInt64)(DWORD_PTR)si.lpMaximumApplicationAddress + 1;
+  const UInt32 kReserveSize = ((UInt32)1 << 16);
+  if (minAdd != kReserveSize)
+  {
+    PrintSize(s, minAdd);
+    s += "-";
+  }
+  else
+  {
+    if ((maxSize & (kReserveSize - 1)) == 0)
+      maxSize += kReserveSize;
+  }
+  PrintSize(s, maxSize);
+}
+
+#ifndef _WIN64
+typedef VOID (WINAPI *Func_GetNativeSystemInfo)(LPSYSTEM_INFO lpSystemInfo);
+#endif
+
+#endif
+
+void GetSysInfo(AString &s1, AString &s2)
+{
+  s1.Empty();
+  s2.Empty();
+
+  #ifdef _WIN32
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    {
+      SysInfo_To_String(s1, si);
+      // s += " : ";
+    }
+    
+    #if !defined(_WIN64) && !defined(UNDER_CE)
+    Func_GetNativeSystemInfo fn_GetNativeSystemInfo = (Func_GetNativeSystemInfo)GetProcAddress(
+        GetModuleHandleA("kernel32.dll"), "GetNativeSystemInfo");
+    if (fn_GetNativeSystemInfo)
+    {
+      SYSTEM_INFO si2;
+      fn_GetNativeSystemInfo(&si2);
+      // if (memcmp(&si, &si2, sizeof(si)) != 0)
+      {
+        // s += " - ";
+        SysInfo_To_String(s2, si2);
+      }
+    }
+    #endif
+  #endif
+}
+
+
 void GetCpuName(AString &s)
 {
   s.Empty();
@@ -2419,43 +2807,100 @@ void GetCpuName(AString &s)
     Cx86cpuid cpuid;
     if (x86cpuid_CheckAndRead(&cpuid))
     {
-      x86cpuid_to_String(cpuid, s);
-      return;
+      AString s2;
+      x86cpuid_to_String(cpuid, s2);
+      s += s2;
     }
+    else
+    {
     #ifdef MY_CPU_AMD64
-    s = "x64";
+    s += "x64";
     #else
-    s = "x86";
+    s += "x86";
     #endif
+    }
   }
   #else
   
     #ifdef MY_CPU_LE
-      s = "LE";
+      s += "LE";
     #elif defined(MY_CPU_BE)
-      s = "BE";
+      s += "BE";
     #endif
 
   #endif
+
+  #ifdef _7ZIP_LARGE_PAGES
+  Add_LargePages_String(s);
+  #endif
 }
+
+
+void GetCpuFeatures(AString &s)
+{
+  s.Empty();
+  
+  #ifdef _WIN32
+  const unsigned kNumFeatures_Extra = 32; // we check also for unknown features
+  const unsigned kNumFeatures = ARRAY_SIZE(k_PF) + kNumFeatures_Extra;
+  for (unsigned i = 0; i < kNumFeatures; i++)
+  {
+    if (IsProcessorFeaturePresent(i))
+    {
+      s.Add_Space_if_NotEmpty();
+      s += TypeToString2(k_PF, ARRAY_SIZE(k_PF), i);
+    }
+  }
+  #endif
+}
+
+
+#ifdef _WIN32
+#ifndef UNDER_CE
+
+typedef void (WINAPI * Func_RtlGetVersion) (OSVERSIONINFOEXW *);
+
+static BOOL My_RtlGetVersion(OSVERSIONINFOEXW *vi)
+{
+  HMODULE ntdll = ::GetModuleHandleW(L"ntdll.dll");
+  if (!ntdll)
+    return FALSE;
+  Func_RtlGetVersion func = (Func_RtlGetVersion)GetProcAddress(ntdll, "RtlGetVersion");
+  if (!func)
+    return FALSE;
+  func(vi);
+  return TRUE;
+}
+
+#endif
+#endif
 
 
 HRESULT Bench(
     DECL_EXTERNAL_CODECS_LOC_VARS
     IBenchPrintCallback *printCallback,
     IBenchCallback *benchCallback,
+    // IBenchFreqCallback *freqCallback,
     const CObjectVector<CProperty> &props,
     UInt32 numIterations,
     bool multiDict)
 {
   if (!CrcInternalTest())
-    return S_FALSE;
+    return E_FAIL;
 
   UInt32 numCPUs = 1;
   UInt64 ramSize = (UInt64)(sizeof(size_t)) << 29;
 
+  NSystem::CProcessAffinity threadsInfo;
+  threadsInfo.InitST();
+
   #ifndef _7ZIP_ST
-  numCPUs = NSystem::GetNumberOfProcessors();
+
+  if (threadsInfo.Get() && threadsInfo.processAffinityMask != 0)
+    numCPUs = threadsInfo.GetNumProcessThreads();
+  else
+    numCPUs = NSystem::GetNumberOfProcessors();
+
   #endif
   
   bool ramSize_Defined = NSystem::GetRamSize(ramSize);
@@ -2470,14 +2915,14 @@ HRESULT Bench(
 
   COneMethodInfo method;
 
-  CBenchBuffer fileDataBuffer;
+  CAlignedBuffer fileDataBuffer;
 
   {
   unsigned i;
   for (i = 0; i < props.Size(); i++)
   {
     const CProperty &property = props[i];
-    UString name = property.Name;
+    UString name (property.Name);
     name.MakeLower_Ascii();
 
     if (name.IsEqualTo("file"))
@@ -2495,16 +2940,14 @@ HRESULT Bench(
         return E_FAIL;
       if (len >= ((UInt32)1 << 31) || len == 0)
         return E_INVALIDARG;
-      if (!fileDataBuffer.Alloc((size_t)len))
-        return E_OUTOFMEMORY;
+      ALLOC_WITH_HRESULT(&fileDataBuffer, (size_t)len);
       UInt32 processedSize;
-      file.Read(fileDataBuffer.Buffer, (UInt32)len, processedSize);
+      file.Read((Byte *)fileDataBuffer, (UInt32)len, processedSize);
       if (processedSize != len)
         return E_FAIL;
       if (printCallback)
       {
         printCallback->Print("file size =");
-        // printCallback->Print(GetOemString(property.Value));
         PrintNumber(*printCallback, len, 0);
         printCallback->NewLine();
       }
@@ -2523,14 +2966,14 @@ HRESULT Bench(
     
     if (name.IsEqualTo("time"))
     {
-      RINOK(ParsePropToUInt32(L"", propVariant, testTime));
+      RINOK(ParsePropToUInt32(UString(), propVariant, testTime));
       continue;
     }
     
     if (name.IsEqualTo("freq"))
     {
       UInt32 freq32 = 0;
-      RINOK(ParsePropToUInt32(L"", propVariant, freq32));
+      RINOK(ParsePropToUInt32(UString(), propVariant, freq32));
       if (freq32 == 0)
         return E_INVALIDARG;
       specifiedFreq = (UInt64)freq32 * 1000000;
@@ -2548,18 +2991,11 @@ HRESULT Bench(
     if (name.IsPrefixedBy_Ascii_NoCase("mt"))
     {
       UString s = name.Ptr(2);
-      if (s == L"*")
+      if (s.IsEqualTo("*")
+          || s.IsEmpty() && propVariant.vt == VT_BSTR && StringsAreEqual_Ascii(propVariant.bstrVal, "*"))
       {
         multiThreadTests = true;
         continue;
-      }
-      if (s.IsEmpty() && propVariant.vt == VT_BSTR)
-      {
-        if (wcscmp(propVariant.bstrVal, L"*") == 0)
-        {
-          multiThreadTests = true;
-          continue;
-        }
       }
       #ifndef _7ZIP_ST
       RINOK(ParseMtProp(s, propVariant, numCPUs, numThreadsSpecified));
@@ -2573,10 +3009,62 @@ HRESULT Bench(
 
   if (printCallback)
   {
-    AString s;
-    GetCpuName(s);
-    printCallback->Print(s);
-    printCallback->NewLine();
+    #ifdef _WIN32
+    #ifndef UNDER_CE
+    {
+      AString s;
+      // OSVERSIONINFO vi;
+      OSVERSIONINFOEXW vi;
+      vi.dwOSVersionInfoSize = sizeof(vi);
+      // if (::GetVersionEx(&vi))
+      if (My_RtlGetVersion(&vi))
+      {
+        s += "Windows";
+        if (vi.dwPlatformId != VER_PLATFORM_WIN32_NT)
+          s.Add_UInt32(vi.dwPlatformId);
+        s += " "; s.Add_UInt32(vi.dwMajorVersion);
+        s += "."; s.Add_UInt32(vi.dwMinorVersion);
+        s += " "; s.Add_UInt32(vi.dwBuildNumber);
+        // s += " "; s += GetAnsiString(vi.szCSDVersion);
+      }
+      printCallback->Print(s);
+      printCallback->NewLine();
+    }
+    #endif
+    #endif
+
+    {
+      AString s1, s2;
+      GetSysInfo(s1, s2);
+      if (!s1.IsEmpty() || !s2.IsEmpty())
+      {
+        printCallback->Print(s1);
+        if (s1 != s2 && !s2.IsEmpty())
+        {
+          printCallback->Print(" - ");
+          printCallback->Print(s2);
+        }
+        printCallback->NewLine();
+      }
+    }
+    {
+      AString s;
+      GetCpuFeatures(s);
+      if (!s.IsEmpty())
+      {
+        printCallback->Print(s);
+        printCallback->NewLine();
+      }
+    }
+    {
+      AString s;
+      GetCpuName(s);
+      if (!s.IsEmpty())
+      {
+        printCallback->Print(s);
+        printCallback->NewLine();
+      }
+    }
   }
 
   if (printCallback)
@@ -2586,7 +3074,7 @@ HRESULT Bench(
 
   UInt64 complexInCommands = kComplexInCommands;
 
-  if (printCallback /* || benchCallback */)
+  if (printCallback /* || freqCallback */)
   {
     UInt64 numMilCommands = 1 << 6;
     if (specifiedFreq != 0)
@@ -2603,6 +3091,9 @@ HRESULT Bench(
       UInt64 start = ::GetTimeCount();
       UInt32 sum = (UInt32)start;
       sum = CountCpuFreq(sum, (UInt32)(numMilCommands * 1000000 / kNumFreqCommands), g_BenchCpuFreqTemp);
+      if (sum == 0xF1541213)
+        if (printCallback)
+          printCallback->Print("");
       const UInt64 realDelta = ::GetTimeCount() - start;
       start = realDelta;
       if (start == 0)
@@ -2619,12 +3110,12 @@ HRESULT Bench(
         else
         {
           // PrintNumber(*printCallback, start, 0);
-          PrintNumber(*printCallback, mipsVal, 5 + ((sum == 0xF1541213) ? 1 : 0));
+          PrintNumber(*printCallback, mipsVal, 5);
         }
       }
       /*
-      if (benchCallback)
-        benchCallback->AddCpuFreq(mipsVal);
+      if (freqCallback)
+        freqCallback->AddCpuFreq(mipsVal);
       */
 
       if (jj >= 3)
@@ -2643,6 +3134,8 @@ HRESULT Bench(
     printCallback->NewLine();
     printCallback->NewLine();
     PrintRequirements(*printCallback, "size: ", ramSize_Defined, ramSize, "CPU hardware threads:", numCPUs);
+    printCallback->Print(GetProcessThreadsInfo(threadsInfo));
+    printCallback->NewLine();
   }
 
   if (numThreadsSpecified < 1 || numThreadsSpecified > kNumThreadsMax)
@@ -2665,11 +3158,11 @@ HRESULT Bench(
         complexInCommands,
         true, numThreadsSpecified,
         method,
-        uncompressedDataSize, fileDataBuffer.Buffer,
+        uncompressedDataSize, (const Byte *)fileDataBuffer,
         kOldLzmaDictBits, printCallback, benchCallback, &benchProps);
   }
 
-  AString methodName = method.MethodName;
+  AString methodName (method.MethodName);
   if (methodName.IsEqualTo_Ascii_NoCase("CRC"))
     methodName = "crc32";
   method.MethodName = methodName;
@@ -2688,26 +3181,34 @@ HRESULT Bench(
     UInt32 complexity = 10000;
     const UInt32 *checkSum = NULL;
     {
-      for (unsigned i = 0; i < ARRAY_SIZE(g_Hash); i++)
+      unsigned i;
+      for (i = 0; i < ARRAY_SIZE(g_Hash); i++)
       {
         const CBenchHash &h = g_Hash[i];
-        AString s = h.Name;
-        AString hProp;
-        int propPos = s.Find(':');
+        AString benchMethod (h.Name);
+        AString benchProps;
+        int propPos = benchMethod.Find(':');
         if (propPos >= 0)
         {
-          hProp = s.Ptr(propPos + 1);
-          s.DeleteFrom(propPos);
+          benchProps = benchMethod.Ptr(propPos + 1);
+          benchMethod.DeleteFrom(propPos);
         }
 
-        if (AreSameMethodNames(s, methodName))
+        if (AreSameMethodNames(benchMethod, methodName))
         {
-          complexity = h.Complex;
-          checkSum = &h.CheckSum;
-          if (method.PropsString.IsEqualTo_Ascii_NoCase(hProp))
-            break;
+          if (benchProps.IsEmpty()
+              || benchMethod.IsEqualTo_Ascii_NoCase("crc32") && benchProps == "8" && method.PropsString.IsEmpty()
+              || method.PropsString.IsPrefixedBy_Ascii_NoCase(benchProps))
+          {
+            complexity = h.Complex;
+            checkSum = &h.CheckSum;
+            if (method.PropsString.IsEqualTo_Ascii_NoCase(benchProps))
+              break;
+          }
         }
       }
+      if (i == ARRAY_SIZE(g_Hash))
+        return E_NOTIMPL;
     }
 
     f.NewLine();
@@ -2852,6 +3353,7 @@ HRESULT Bench(
   }
 
   PrintRequirements(f, "usage:", true, GetBenchMemoryUsage(numThreads, dict, totalBenchMode), "Benchmark threads:   ", numThreads);
+  f.NewLine();
 
   f.NewLine();
 
@@ -2968,9 +3470,9 @@ HRESULT Bench(
       {
         res = TotalBench(EXTERNAL_CODECS_LOC_VARS
             complexInCommands, numThreads,
-            dictIsDefined || fileDataBuffer.Buffer, // forceUnpackSize
-            fileDataBuffer.Buffer ? fileDataBuffer.BufferSize : dict,
-            fileDataBuffer.Buffer,
+            dictIsDefined || fileDataBuffer.IsAllocated(), // forceUnpackSize
+            fileDataBuffer.IsAllocated() ? fileDataBuffer.Size() : dict,
+            (const Byte *)fileDataBuffer,
             printCallback, &callback);
         RINOK(res);
       }
@@ -2997,19 +3499,35 @@ HRESULT Bench(
     bool needSetComplexity = true;
     if (!methodName.IsEqualTo_Ascii_NoCase("LZMA"))
     {
-      for (unsigned i = 0; i < ARRAY_SIZE(g_Bench); i++)
+      unsigned i;
+      for (i = 0; i < ARRAY_SIZE(g_Bench); i++)
       {
         const CBenchMethod &h = g_Bench[i];
-        AString s = h.Name;
-        if (AreSameMethodNames(h.Name, methodName))
+        AString benchMethod (h.Name);
+        AString benchProps;
+        int propPos = benchMethod.Find(':');
+        if (propPos >= 0)
         {
-          callback.BenchProps.EncComplex = h.EncComplex;
-          callback.BenchProps.DecComplexCompr = h.DecComplexCompr;
-          callback.BenchProps.DecComplexUnc = h.DecComplexUnc;;
-          needSetComplexity = false;
-          break;
+          benchProps = benchMethod.Ptr(propPos + 1);
+          benchMethod.DeleteFrom(propPos);
+        }
+
+        if (AreSameMethodNames(benchMethod, methodName))
+        {
+          if (benchProps.IsEmpty()
+              || benchProps == "x5" && method.PropsString.IsEmpty()
+              || method.PropsString.IsPrefixedBy_Ascii_NoCase(benchProps))
+          {
+            callback.BenchProps.EncComplex = h.EncComplex;
+            callback.BenchProps.DecComplexCompr = h.DecComplexCompr;
+            callback.BenchProps.DecComplexUnc = h.DecComplexUnc;;
+            needSetComplexity = false;
+            break;
+          }
         }
       }
+      if (i == ARRAY_SIZE(g_Bench))
+        return E_NOTIMPL;
     }
     if (needSetComplexity)
       callback.BenchProps.SetLzmaCompexity();
@@ -3040,13 +3558,13 @@ HRESULT Bench(
         // method2 can have two different dictionary size properties.
         // And last property is main.
         NCOM::CPropVariant propVariant = (UInt32)pow;
-        RINOK(method2.ParseMethodFromPROPVARIANT(L"d", propVariant));
+        RINOK(method2.ParseMethodFromPROPVARIANT((UString)"d", propVariant));
       }
 
       size_t uncompressedDataSize;
-      if (fileDataBuffer.Buffer)
+      if (fileDataBuffer.IsAllocated())
       {
-        uncompressedDataSize = fileDataBuffer.BufferSize;
+        uncompressedDataSize = fileDataBuffer.Size();
       }
       else
       {
@@ -3060,7 +3578,7 @@ HRESULT Bench(
           complexInCommands,
           true, numThreads,
           method2,
-          uncompressedDataSize, fileDataBuffer.Buffer,
+          uncompressedDataSize, (const Byte *)fileDataBuffer,
           kOldLzmaDictBits, printCallback, &callback, &callback.BenchProps);
       f.NewLine();
       RINOK(res);

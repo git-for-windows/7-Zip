@@ -226,12 +226,9 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
         if (ai.SetID != 0)
         {
           AString s;
-          char temp[32];
-          ConvertUInt32ToString(ai.SetID, temp);
-          s += temp;
-          ConvertUInt32ToString(ai.CabinetNumber + 1, temp);
+          s.Add_UInt32(ai.SetID);
           s += '_';
-          s += temp;
+          s.Add_UInt32(ai.CabinetNumber + 1);
           s += ".cab";
           prop = s;
         }
@@ -288,7 +285,7 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
         ConvertUTF8ToUnicode(item.Name, unicodeName);
       else
         unicodeName = MultiByteToUnicodeString(item.Name, CP_ACP);
-      prop = (const wchar_t *)NItemName::WinNameToOSName(unicodeName);
+      prop = (const wchar_t *)NItemName::WinPathToOsPath(unicodeName);
       break;
     }
     
@@ -491,7 +488,7 @@ STDMETHODIMP CHandler::Open(IInStream *inStream,
 
         if (!_errorMessage.IsEmpty())
           _errorMessage.Add_LF();
-        _errorMessage.AddAscii("Can't open volume: ");
+        _errorMessage += "Can't open volume: ";
         _errorMessage += fullName;
         
         if (prevChecked)
@@ -552,9 +549,9 @@ private:
   
   Byte *TempBuf;
   UInt32 TempBufSize;
+  UInt32 TempBufWritten;
   unsigned NumIdenticalFiles;
   bool TempBufMode;
-  UInt32 m_BufStartFolderOffset;
 
   unsigned m_StartIndex;
   unsigned m_CurrentIndex;
@@ -578,7 +575,6 @@ private:
   HRESULT OpenFile();
   HRESULT CloseFileWithResOp(Int32 resOp);
   HRESULT CloseFile();
-  HRESULT Write2(const void *data, UInt32 size, UInt32 *processedSize, bool isOK);
 public:
   HRESULT WriteEmptyFiles();
 
@@ -675,11 +671,11 @@ HRESULT CFolderOutStream::OpenFile()
         FreeTempBuf();
         TempBuf = (Byte *)MyAlloc(item.Size);
         TempBufSize = item.Size;
-        if (TempBuf == NULL)
+        if (!TempBuf)
           return E_OUTOFMEMORY;
       }
       TempBufMode = true;
-      m_BufStartFolderOffset = item.Offset;
+      TempBufWritten = 0;
     }
     else if (numExtractItems == 1)
     {
@@ -728,8 +724,9 @@ HRESULT CFolderOutStream::WriteEmptyFiles()
 }
 
 
-HRESULT CFolderOutStream::Write2(const void *data, UInt32 size, UInt32 *processedSize, bool isOK)
+HRESULT CFolderOutStream::Write(const void *data, UInt32 size, UInt32 *processedSize)
 {
+  // (data == NULL) means Error_Data for solid folder flushing
   COM_TRY_BEGIN
   
   UInt32 realProcessed = 0;
@@ -744,21 +741,34 @@ HRESULT CFolderOutStream::Write2(const void *data, UInt32 size, UInt32 *processe
       HRESULT res = S_OK;
       if (numBytesToWrite != 0)
       {
-        if (!isOK)
+        if (!data)
           m_IsOk = false;
+        
         if (m_RealOutStream)
         {
           UInt32 processedSizeLocal = 0;
-          res = m_RealOutStream->Write((const Byte *)data, numBytesToWrite, &processedSizeLocal);
+          // 18.01 : we don't want ZEROs instead of missing data
+          if (data)
+            res = m_RealOutStream->Write((const Byte *)data, numBytesToWrite, &processedSizeLocal);
+          else
+            processedSizeLocal = numBytesToWrite;
           numBytesToWrite = processedSizeLocal;
         }
+        
         if (TempBufMode && TempBuf)
-          memcpy(TempBuf + (m_PosInFolder - m_BufStartFolderOffset), data, numBytesToWrite);
+        {
+          if (data)
+          {
+            memcpy(TempBuf + TempBufWritten, data, numBytesToWrite);
+            TempBufWritten += numBytesToWrite;
+          }
+        }
       }
       realProcessed += numBytesToWrite;
       if (processedSize)
         *processedSize = realProcessed;
-      data = (const void *)((const Byte *)data + numBytesToWrite);
+      if (data)
+        data = (const void *)((const Byte *)data + numBytesToWrite);
       size -= numBytesToWrite;
       m_RemainFileSize -= numBytesToWrite;
       m_PosInFolder += numBytesToWrite;
@@ -776,7 +786,7 @@ HRESULT CFolderOutStream::Write2(const void *data, UInt32 size, UInt32 *processe
           m_FileIsOpen = true;
           m_CurrentIndex++;
           if (result == S_OK && m_RealOutStream && TempBuf)
-            result = WriteStream(m_RealOutStream, TempBuf, (size_t)(m_PosInFolder - m_BufStartFolderOffset));
+            result = WriteStream(m_RealOutStream, TempBuf, TempBufWritten);
           
           if (!TempBuf && TempBufMode && m_RealOutStream)
           {
@@ -825,7 +835,8 @@ HRESULT CFolderOutStream::Write2(const void *data, UInt32 size, UInt32 *processe
         realProcessed += numBytesToWrite;
         if (processedSize)
           *processedSize = realProcessed;
-        data = (const void *)((const Byte *)data + numBytesToWrite);
+        if (data)
+          data = (const void *)((const Byte *)data + numBytesToWrite);
         size -= numBytesToWrite;
         m_PosInFolder += numBytesToWrite;
       }
@@ -846,12 +857,6 @@ HRESULT CFolderOutStream::Write2(const void *data, UInt32 size, UInt32 *processe
 }
 
 
-STDMETHODIMP CFolderOutStream::Write(const void *data, UInt32 size, UInt32 *processedSize)
-{
-  return Write2(data, size, processedSize, true);
-}
-
-
 HRESULT CFolderOutStream::FlushCorrupted(unsigned folderIndex)
 {
   if (!NeedMoreWrite())
@@ -865,19 +870,16 @@ HRESULT CFolderOutStream::FlushCorrupted(unsigned folderIndex)
     return S_OK;
   }
 
-  const unsigned kBufSize = (1 << 12);
-  Byte buf[kBufSize];
-  for (unsigned i = 0; i < kBufSize; i++)
-    buf[i] = 0;
-  
   for (;;)
   {
     if (!NeedMoreWrite())
       return S_OK;
     UInt64 remain = GetRemain();
-    UInt32 size = (remain < kBufSize ? (UInt32)remain : (UInt32)kBufSize);
+    UInt32 size = (UInt32)1 << 20;
+    if (size > remain)
+      size = (UInt32)remain;
     UInt32 processedSizeLocal = 0;
-    RINOK(Write2(buf, size, &processedSizeLocal, false));
+    RINOK(Write(NULL, size, &processedSizeLocal));
   }
 }
 

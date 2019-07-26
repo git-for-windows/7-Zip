@@ -31,8 +31,9 @@ using namespace NDir;
 extern bool g_IsNT;
 #endif
 
-static CFSTR kTempDirPrefix = FTEXT("7zE");
-static LPCTSTR kSvenZipSetFolderFormat = TEXT("7-Zip::SetTargetFolder");
+#define kTempDirPrefix FTEXT("7zE")
+
+static LPCTSTR const kSvenZipSetFolderFormat = TEXT("7-Zip::SetTargetFolder");
 
 ////////////////////////////////////////////////////////
 
@@ -80,15 +81,17 @@ CDataObject::CDataObject()
 
 STDMETHODIMP CDataObject::SetData(LPFORMATETC etc, STGMEDIUM *medium, BOOL /* release */)
 {
-  if (etc->cfFormat == m_SetFolderFormat && etc->tymed == TYMED_HGLOBAL &&
-      etc->dwAspect == DVASPECT_CONTENT && medium->tymed == TYMED_HGLOBAL)
+  if (etc->cfFormat == m_SetFolderFormat
+      && etc->tymed == TYMED_HGLOBAL
+      && etc->dwAspect == DVASPECT_CONTENT
+      && medium->tymed == TYMED_HGLOBAL)
   {
     Path.Empty();
-    if (medium->hGlobal == 0)
+    if (!medium->hGlobal)
       return S_OK;
     size_t size = GlobalSize(medium->hGlobal) / sizeof(wchar_t);
     const wchar_t *src = (const wchar_t *)GlobalLock(medium->hGlobal);
-    if (src != 0)
+    if (src)
     {
       for (size_t i = 0; i < size; i++)
       {
@@ -108,13 +111,13 @@ static HGLOBAL DuplicateGlobalMem(HGLOBAL srcGlobal)
 {
   SIZE_T size = GlobalSize(srcGlobal);
   const void *src = GlobalLock(srcGlobal);
-  if (src == 0)
+  if (!src)
     return 0;
   HGLOBAL destGlobal = GlobalAlloc(GHND | GMEM_SHARE, size);
-  if (destGlobal != 0)
+  if (destGlobal)
   {
     void *dest = GlobalLock(destGlobal);
-    if (dest == 0)
+    if (!dest)
     {
       GlobalFree(destGlobal);
       destGlobal = 0;
@@ -135,7 +138,7 @@ STDMETHODIMP CDataObject::GetData(LPFORMATETC etc, LPSTGMEDIUM medium)
   medium->tymed = m_Etc.tymed;
   medium->pUnkForRelease = 0;
   medium->hGlobal = DuplicateGlobalMem(hGlobal);
-  if (medium->hGlobal == 0)
+  if (!medium->hGlobal)
     return E_OUTOFMEMORY;
   return S_OK;
 }
@@ -260,7 +263,7 @@ static bool CopyNamesToHGlobal(NMemory::CGlobal &hgDrop, const UStringVector &na
     
     NMemory::CGlobalLock dropLock(hgDrop);
     DROPFILES* dropFiles = (DROPFILES*)dropLock.GetPointer();
-    if (dropFiles == 0)
+    if (!dropFiles)
       return false;
     dropFiles->fNC = FALSE;
     dropFiles->pt.x = 0;
@@ -290,7 +293,7 @@ static bool CopyNamesToHGlobal(NMemory::CGlobal &hgDrop, const UStringVector &na
     
     NMemory::CGlobalLock dropLock(hgDrop);
     DROPFILES* dropFiles = (DROPFILES*)dropLock.GetPointer();
-    if (dropFiles == 0)
+    if (!dropFiles)
       return false;
     dropFiles->fNC = FALSE;
     dropFiles->pt.x = 0;
@@ -326,6 +329,7 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
   // CSelectedState selState;
   // SaveSelectedState(selState);
 
+  // FString dirPrefix2;
   FString dirPrefix;
   CTempDir tempDirectory;
 
@@ -334,8 +338,13 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
     dirPrefix = us2fs(GetFsPath());
   else
   {
-    tempDirectory.Create(kTempDirPrefix);
+    if (!tempDirectory.Create(kTempDirPrefix))
+    {
+      MessageBox_Error(L"Can't create temp folder");
+      return;
+    }
     dirPrefix = tempDirectory.GetPath();
+    // dirPrefix2 = dirPrefix;
     NFile::NName::NormalizeDirPathPrefix(dirPrefix);
   }
 
@@ -344,6 +353,10 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
 
   {
     UStringVector names;
+
+    // names variable is     USED for drag and drop from 7-zip to Explorer or to 7-zip archive folder.
+    // names variable is NOT USED for drag and drop from 7-zip to 7-zip File System folder.
+
     FOR_VECTOR (i, indices)
     {
       UInt32 index = indices[i];
@@ -353,6 +366,23 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
       else
       {
         s = GetItemName(index);
+        /*
+        // We use (keepAndReplaceEmptyPrefixes = true) in CAgentFolder::Extract
+        // So the following code is not required.
+        // Maybe we also can change IFolder interface and send some flag also.
+  
+        if (s.IsEmpty())
+        {
+          // Correct_FsFile_Name("") returns "_".
+          // If extracting code removes empty folder prefixes from path (as it was in old version),
+          // Explorer can't find "_" folder in temp folder.
+          // We can ask Explorer to copy parent temp folder "7zE" instead.
+
+          names.Clear();
+          names.Add(dirPrefix2);
+          break;
+        }
+        */
         s = Get_Correct_FsFile_Name(s);
       }
       names.Add(fs2us(dirPrefix) + s);
@@ -370,11 +400,67 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
   dropSourceSpec->DataObjectSpec = dataObjectSpec;
   dropSourceSpec->DataObject = dataObjectSpec;
 
-  bool moveIsAllowed = isFSFolder;
+ 
+  /*
+  CTime - file creation timestamp.
+  There are two operations in Windows with Drag and Drop:
+    COPY_OPERATION - icon with    Plus sign - CTime will be set as current_time.
+    MOVE_OPERATION - icon without Plus sign - CTime will be preserved
 
+  Note: if we call DoDragDrop() with (effectsOK = DROPEFFECT_MOVE), then
+        it will use MOVE_OPERATION and CTime will be preserved.
+        But MoveFile() function doesn't preserve CTime, if different volumes are used.
+        Why it's so?
+        Does DoDragDrop() use some another function (not MoveFile())?
+
+  if (effectsOK == DROPEFFECT_COPY) it works as COPY_OPERATION
+    
+  if (effectsOK == DROPEFFECT_MOVE) drag works as MOVE_OPERATION
+
+  if (effectsOK == (DROPEFFECT_COPY | DROPEFFECT_MOVE))
+  {
+    if we drag file to same volume, then Windows suggests:
+       CTRL      - COPY_OPERATION
+       [default] - MOVE_OPERATION
+    
+    if we drag file to another volume, then Windows suggests
+       [default] - COPY_OPERATION
+       SHIFT     - MOVE_OPERATION
+  }
+
+  We want to use MOVE_OPERATION for extracting from archive (open in 7-Zip) to Explorer:
+  It has the following advantages:
+    1) it uses fast MOVE_OPERATION instead of slow COPY_OPERATION and DELETE, if same volume.
+    2) it preserved CTime
+
+  Some another programs support only COPY_OPERATION.
+  So we can use (DROPEFFECT_COPY | DROPEFFECT_MOVE)
+
+  Also another program can return from DoDragDrop() before
+  files using. But we delete temp folder after DoDragDrop(),
+  and another program can't open input files in that case.
+
+  We create objects:
+    IDropSource *dropSource
+    IDataObject *dataObject
+  if DropTarget is 7-Zip window, then 7-Zip's
+    IDropTarget::DragOver() sets Path in IDataObject.
+  and
+    IDropSource::QueryContinueDrag() sets NeedPostCopy, if Path is not epmty.
+  So we can detect destination path after DoDragDrop().
+  Now we don't know any good way to detect destination path for D&D to Explorer.
+  */
+
+  bool moveIsAllowed = isFSFolder;
+  /*
   DWORD effectsOK = DROPEFFECT_COPY;
   if (moveIsAllowed)
     effectsOK |= DROPEFFECT_MOVE;
+  */
+
+  // 18.04: was changed
+  DWORD effectsOK = DROPEFFECT_MOVE | DROPEFFECT_COPY;
+
   DWORD effect;
   _panelCallback->DragBegin();
   
@@ -394,7 +480,8 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
         NFile::NName::NormalizeDirPathPrefix(dataObjectSpec->Path);
         CCopyToOptions options;
         options.folder = dataObjectSpec->Path;
-        options.moveMode = (effect == DROPEFFECT_MOVE);
+        // if MOVE is not allowed, we just use COPY operation
+        options.moveMode = (effect == DROPEFFECT_MOVE && moveIsAllowed);
         res = CopyTo(options, indices, &dropSourceSpec->Messages);
       }
     /*
@@ -407,7 +494,7 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
     // we ignore E_UNEXPECTED that is returned if we drag file to printer
     if (res != DRAGDROP_S_CANCEL && res != S_OK
         && res != E_UNEXPECTED)
-      MessageBoxError(res);
+      MessageBox_Error_HRESULT(res);
 
     res = dropSourceSpec->Result;
   }
@@ -421,10 +508,10 @@ void CPanel::OnDrag(LPNMLISTVIEW /* nmListView */)
   
   if (res != S_OK && res != E_ABORT)
   {
-    // we restore Notify before MessageBoxError. So we will se files selection
+    // we restore Notify before MessageBox_Error_HRESULT. So we will se files selection
     disableNotify.Restore();
     // SetFocusToList();
-    MessageBoxError(res);
+    MessageBox_Error_HRESULT(res);
   }
   if (res == S_OK && dropSourceSpec->Messages.IsEmpty() && !canceled)
     KillSelection();
@@ -451,7 +538,7 @@ static void MySetDropHighlighted(HWND hWnd, int index, bool enable)
 
 void CDropTarget::RemoveSelection()
 {
-  if (m_SelectionIndex >= 0 && m_Panel != 0)
+  if (m_SelectionIndex >= 0 && m_Panel)
     MySetDropHighlighted(m_Panel->_listView, m_SelectionIndex, false);
   m_SelectionIndex = -1;
 }
@@ -531,7 +618,7 @@ void CDropTarget::PositionCursor(POINTL ptl)
 
 bool CDropTarget::IsFsFolderPath() const
 {
-  if (!m_IsAppTarget && m_Panel != 0)
+  if (!m_IsAppTarget && m_Panel)
     return (m_Panel->IsFSFolder() || (m_Panel->IsFSDrivesFolder() && m_SelectionIndex >= 0));
   return false;
 }
@@ -590,7 +677,7 @@ static void GetNamesFromDataObject(IDataObject *dataObject, UStringVector &names
     size_t blockSize = GlobalSize(medium.hGlobal);
     NMemory::CGlobalLock dropLock(medium.hGlobal);
     const DROPFILES* dropFiles = (DROPFILES*)dropLock.GetPointer();
-    if (dropFiles == 0)
+    if (!dropFiles)
       return;
     if (blockSize < dropFiles->pFiles)
       return;
@@ -605,7 +692,7 @@ static void GetNamesFromDataObject(IDataObject *dataObject, UStringVector &names
 
 bool CDropTarget::IsItSameDrive() const
 {
-  if (m_Panel == 0)
+  if (!m_Panel)
     return false;
   if (!IsFsFolderPath())
     return false;
@@ -619,7 +706,10 @@ bool CDropTarget::IsItSameDrive() const
       return false;
   }
   else if (m_Panel->IsFSDrivesFolder() && m_SelectionIndex >= 0)
-    drive = m_SubFolderName + WCHAR_PATH_SEPARATOR;
+  {
+    drive = m_SubFolderName;
+    drive.Add_PathSepar();
+  }
   else
     return false;
 
@@ -635,6 +725,21 @@ bool CDropTarget::IsItSameDrive() const
   return true;
 }
 
+
+/*
+  There are 2 different actions, when we drag to 7-Zip:
+  1) Drag from any external program except of Explorer to "7-Zip" FS folder.
+     We want to create new archive for that operation.
+  2) all another operation work as usual file COPY/MOVE
+    - Drag from "7-Zip" FS to "7-Zip" FS.
+        COPY/MOVE are supported.
+    - Drag to open archive in 7-Zip.
+        We want to update archive.
+        We replace COPY to MOVE.
+    - Drag from "7-Zip" archive to "7-Zip" FS.
+        We replace COPY to MOVE.
+*/
+
 DWORD CDropTarget::GetEffect(DWORD keyState, POINTL /* pt */, DWORD allowedEffect)
 {
   if (!m_DropIsAllowed || !m_PanelDropIsAllowed)
@@ -644,10 +749,12 @@ DWORD CDropTarget::GetEffect(DWORD keyState, POINTL /* pt */, DWORD allowedEffec
     allowedEffect &= ~DROPEFFECT_MOVE;
 
   DWORD effect = 0;
+  
   if (keyState & MK_CONTROL)
     effect = allowedEffect & DROPEFFECT_COPY;
   else if (keyState & MK_SHIFT)
     effect = allowedEffect & DROPEFFECT_MOVE;
+  
   if (effect == 0)
   {
     if (allowedEffect & DROPEFFECT_COPY)
@@ -689,10 +796,10 @@ bool CDropTarget::SetPath(bool enablePath) const
     path = GetTargetPath();
   size_t size = path.Len() + 1;
   medium.hGlobal = GlobalAlloc(GHND | GMEM_SHARE, size * sizeof(wchar_t));
-  if (medium.hGlobal == 0)
+  if (!medium.hGlobal)
     return false;
   wchar_t *dest = (wchar_t *)GlobalLock(medium.hGlobal);
-  if (dest == 0)
+  if (!dest)
   {
     GlobalUnlock(medium.hGlobal);
     return false;
@@ -833,8 +940,10 @@ void CPanel::CompressDropFiles(const UStringVector &fileNames, const UString &fo
       if (IsFolderInTemp(folderPath2F))
         folderPath2 = ROOT_FS_FOLDER;
     }
-    const UString archiveName = CreateArchiveName(fileNames.Front(), (fileNames.Size() > 1), false);
-    CompressFiles(folderPath2, archiveName, L"",
+    
+    const UString arcName = CreateArchiveName(fileNames);
+    
+    CompressFiles(folderPath2, arcName, L"",
       true, // addExtension
       fileNames,
       false, // email

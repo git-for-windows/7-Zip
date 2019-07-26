@@ -6,6 +6,7 @@
 
 #include "../../../Common/ComTry.h"
 #include "../../../Common/IntToString.h"
+#include "../../../Common/MyBuffer2.h"
 #include "../../../Common/UTFConvert.h"
 
 #include "../../../Windows/PropVariantUtils.h"
@@ -104,20 +105,18 @@ static const char * const kHostOS[] =
   , "BeOS"
 };
 
-static const char *kUnknownOS = "Unknown";
-
-static const CUInt32PCharPair k_Flags[] =
+static const char * const k_Flags[] =
 {
-  { 0, "Volume" },
-  { 1, "Comment" },
-  { 2, "Lock" },
-  { 3, "Solid" },
-  { 4, "NewVolName" }, // pack_comment in old versuons
-  { 5, "Authenticity" },
-  { 6, "Recovery" },
-  { 7, "BlockEncryption" },
-  { 8, "FirstVolume" },
-  { 9, "EncryptVer" }
+    "Volume"
+  , "Comment"
+  , "Lock"
+  , "Solid"
+  , "NewVolName" // pack_comment in old versuons
+  , "Authenticity"
+  , "Recovery"
+  , "BlockEncryption"
+  , "FirstVolume"
+  , "EncryptVer" // 9
 };
 
 enum EErrorType
@@ -132,14 +131,13 @@ class CInArchive
 {
   IInStream *m_Stream;
   UInt64 m_StreamStartPosition;
-  CBuffer<wchar_t> _unicodeNameBuffer;
+  UString _unicodeNameBuffer;
   CByteBuffer _comment;
   CByteBuffer m_FileHeaderData;
   NHeader::NBlock::CBlock m_BlockHeader;
   NCrypto::NRar3::CDecoder *m_RarAESSpec;
   CMyComPtr<ICompressFilter> m_RarAES;
-  CBuffer<Byte> m_DecryptedData;
-  Byte *m_DecryptedDataAligned;
+  CAlignedBuffer m_DecryptedDataAligned;
   UInt32 m_DecryptedDataSize;
   bool m_CryptoMode;
   UInt32 m_CryptoPos;
@@ -272,14 +270,19 @@ bool CInArchive::ReadBytesAndTestSize(void *data, UInt32 size)
   return processed == size;
 }
 
-static void DecodeUnicodeFileName(const Byte *name, const Byte *encName,
+
+static unsigned DecodeUnicodeFileName(const Byte *name, const Byte *encName,
     unsigned encSize, wchar_t *unicodeName, unsigned maxDecSize)
 {
   unsigned encPos = 0;
   unsigned decPos = 0;
   unsigned flagBits = 0;
   Byte flags = 0;
-  Byte highByte = encName[encPos++];
+
+  if (encPos >= encSize)
+    return 0; // error
+  const unsigned highBits = ((unsigned)encName[encPos++]) << 8;
+  
   while (encPos < encSize && decPos < maxDecSize)
   {
     if (flagBits == 0)
@@ -287,39 +290,45 @@ static void DecodeUnicodeFileName(const Byte *name, const Byte *encName,
       flags = encName[encPos++];
       flagBits = 8;
     }
-    switch (flags >> 6)
-    {
-      case 0:
-        unicodeName[decPos++] = encName[encPos++];
-        break;
-      case 1:
-        unicodeName[decPos++] = (wchar_t)(encName[encPos++] + (highByte << 8));
-        break;
-      case 2:
-        unicodeName[decPos++] = (wchar_t)(encName[encPos] + (encName[encPos + 1] << 8));
-        encPos += 2;
-        break;
-      case 3:
-        {
-          unsigned len = encName[encPos++];
-          if (len & 0x80)
-          {
-            Byte correction = encName[encPos++];
-            for (len = (len & 0x7f) + 2;
-                len > 0 && decPos < maxDecSize; len--, decPos++)
-              unicodeName[decPos] = (wchar_t)(((name[decPos] + correction) & 0xff) + (highByte << 8));
-          }
-          else
-            for (len += 2; len > 0 && decPos < maxDecSize; len--, decPos++)
-              unicodeName[decPos] = name[decPos];
-        }
-        break;
-    }
-    flags <<= 2;
+    
+    if (encPos >= encSize)
+      break; // error
+    unsigned len = encName[encPos++];
+
     flagBits -= 2;
+    const unsigned mode = (flags >> flagBits) & 3;
+    
+    if (mode != 3)
+    {
+      if (mode == 1)
+        len += highBits;
+      else if (mode == 2)
+      {
+        if (encPos >= encSize)
+          break; // error
+        len += ((unsigned)encName[encPos++] << 8);
+      }
+      unicodeName[decPos++] = (wchar_t)len;
+    }
+    else
+    {
+      if (len & 0x80)
+      {
+        if (encPos >= encSize)
+          break; // error
+        Byte correction = encName[encPos++];
+        for (len = (len & 0x7f) + 2; len > 0 && decPos < maxDecSize; len--, decPos++)
+          unicodeName[decPos] = (wchar_t)(((name[decPos] + correction) & 0xff) + highBits);
+      }
+      else
+        for (len += 2; len > 0 && decPos < maxDecSize; len--, decPos++)
+          unicodeName[decPos] = name[decPos];
+    }
   }
-  unicodeName[decPos < maxDecSize ? decPos : maxDecSize - 1] = 0;
+  
+  return decPos < maxDecSize ? decPos : maxDecSize - 1;
 }
+
 
 void CInArchive::ReadName(const Byte *p, unsigned nameSize, CItem &item)
 {
@@ -336,8 +345,8 @@ void CInArchive::ReadName(const Byte *p, unsigned nameSize, CItem &item)
       {
         i++;
         unsigned uNameSizeMax = MyMin(nameSize, (unsigned)0x400);
-        _unicodeNameBuffer.AllocAtLeast(uNameSizeMax + 1);
-        DecodeUnicodeFileName(p, p + i, nameSize - i, _unicodeNameBuffer, uNameSizeMax);
+        unsigned len = DecodeUnicodeFileName(p, p + i, nameSize - i, _unicodeNameBuffer.GetBuf(uNameSizeMax), uNameSizeMax);
+        _unicodeNameBuffer.ReleaseBuf_SetEnd(len);
         item.UnicodeName = _unicodeNameBuffer;
       }
       else if (!ConvertUTF8ToUnicode(item.Name, item.UnicodeName))
@@ -406,6 +415,8 @@ bool CInArchive::ReadHeaderReal(const Byte *p, unsigned size, CItem &item)
     if (size < 8)
       return false;
     item.PackSize |= ((UInt64)Get32(p) << 32);
+    if (item.PackSize >= ((UInt64)1 << 63))
+      return false;
     item.Size |= ((UInt64)Get32(p + 4) << 32);
     p += 8;
     size -= 8;
@@ -542,11 +553,12 @@ HRESULT CInArchive::GetNextItem(CItem &item, ICryptoGetTextPassword *getTextPass
       m_RarAESSpec->SetPassword((const Byte *)buffer, len * 2);
 
       const UInt32 kDecryptedBufferSize = (1 << 12);
-      if (m_DecryptedData.Size() == 0)
+      if (m_DecryptedDataAligned.Size() == 0)
       {
-        const UInt32 kAlign = 16;
-        m_DecryptedData.Alloc(kDecryptedBufferSize + kAlign);
-        m_DecryptedDataAligned = (Byte *)((ptrdiff_t)((Byte *)m_DecryptedData + kAlign - 1) & ~(ptrdiff_t)(kAlign - 1));
+        // const UInt32 kAlign = 16;
+        m_DecryptedDataAligned.AllocAtLeast(kDecryptedBufferSize);
+        if (!m_DecryptedDataAligned.IsAllocated())
+          return E_OUTOFMEMORY;
       }
       RINOK(m_RarAES->Init());
       size_t decryptedDataSizeT = kDecryptedBufferSize;
@@ -658,7 +670,8 @@ HRESULT CInArchive::GetNextItem(CItem &item, ICryptoGetTextPassword *getTextPass
         {
           if (processed < offset + 2)
             error = k_ErrorType_Corrupted;
-          ArcInfo.VolNumber = (UInt32)Get16(m_FileHeaderData + offset);
+          else
+            ArcInfo.VolNumber = (UInt32)Get16(m_FileHeaderData + offset);
         }
 
         ArcInfo.EndOfArchive_was_Read = true;
@@ -768,7 +781,9 @@ static const Byte kProps[] =
   kpidCRC,
   kpidHostOS,
   kpidMethod,
-  kpidUnpackVer
+  kpidUnpackVer,
+
+  kpidVolumeIndex
 };
 
 static const Byte kArcProps[] =
@@ -818,7 +833,7 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
     case kpidSolid: prop = _arcInfo.IsSolid(); break;
     case kpidCharacts:
     {
-      AString s = FlagsToString(k_Flags, ARRAY_SIZE(k_Flags), _arcInfo.Flags);
+      AString s (FlagsToString(k_Flags, ARRAY_SIZE(k_Flags), _arcInfo.Flags));
       // FLAGS_TO_PROP(k_Flags, _arcInfo.Flags, prop);
       if (_arcInfo.Is_DataCRC_Defined())
       {
@@ -871,8 +886,7 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
 
       if (/* &_missingVol || */ !_missingVolName.IsEmpty())
       {
-        UString s;
-        s.SetFromAscii("Missing volume : ");
+        UString s ("Missing volume : ");
         s += _missingVolName;
         prop = s;
       }
@@ -900,13 +914,11 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
       {
         if (_arcInfo.Is_VolNumber_Defined())
         {
-          char sz[16];
-          ConvertUInt32ToString((UInt32)_arcInfo.VolNumber + 1, sz);
-          unsigned len = MyStringLen(sz);
-          AString s = "part";
-          for (; len < 2; len++)
+          AString s ("part");
+          UInt32 v = (UInt32)_arcInfo.VolNumber + 1;
+          if (v < 10)
             s += '0';
-          s += sz;
+          s.Add_UInt32(v);
           s += ".rar";
           prop = s;
         }
@@ -974,7 +986,7 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
         u = mainItem->GetName();
       u += item.GetName();
       */
-      prop = (const wchar_t *)NItemName::WinNameToOSName(item.GetName());
+      prop = (const wchar_t *)NItemName::WinPathToOsPath(item.GetName());
       break;
     }
     case kpidIsDir: prop = item.IsDir(); break;
@@ -989,6 +1001,12 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
     case kpidCommented: prop = item.IsCommented(); break;
     case kpidSplitBefore: prop = item.IsSplitBefore(); break;
     case kpidSplitAfter: prop = _items[refItem.ItemIndex + refItem.NumItems - 1].IsSplitAfter(); break;
+    
+    case kpidVolumeIndex:
+      if (_arcInfo.Is_VolNumber_Defined())
+        prop = (UInt32)(_arcInfo.VolNumber + refItem.VolumeIndex);
+      break;
+
     case kpidCRC:
     {
       prop = ((lastItem.IsSplitAfter()) ? item.FileCRC : lastItem.FileCRC);
@@ -1015,7 +1033,9 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
       prop = s;
       break;
     }
-    case kpidHostOS: prop = (item.HostOS < ARRAY_SIZE(kHostOS)) ? kHostOS[item.HostOS] : kUnknownOS; break;
+    case kpidHostOS:
+      TYPE_TO_PROP(kHostOS, item.HostOS, prop);
+      break;
   }
   prop.Detach(value);
   return S_OK;
@@ -1324,7 +1344,13 @@ STDMETHODIMP CVolsInStream::Read(void *data, UInt32 size, UInt32 *processedSize)
       if (_curIndex >= _refItem.NumItems)
         break;
       const CItem &item = (*_items)[_refItem.ItemIndex + _curIndex];
-      IInStream *s = (*_arcs)[_refItem.VolumeIndex + _curIndex].Stream;
+      unsigned volIndex = _refItem.VolumeIndex + _curIndex;
+      if (volIndex >= _arcs->Size())
+      {
+        return S_OK;
+        // return S_FALSE;
+      }
+      IInStream *s = (*_arcs)[volIndex].Stream;
       RINOK(s->Seek(item.GetDataPosition(), STREAM_SEEK_SET, NULL));
       _stream = s;
       _calcCrc = (CrcIsOK && item.IsSplitAfter());
@@ -1677,7 +1703,7 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems,
               methodID += 2;
             else
               methodID += 3;
-            RINOK(CreateCoder(EXTERNAL_CODECS_VARS methodID, false, mi.Coder));
+            RINOK(CreateCoder_Id(EXTERNAL_CODECS_VARS methodID, false, mi.Coder));
           }
          
           if (mi.Coder == 0)

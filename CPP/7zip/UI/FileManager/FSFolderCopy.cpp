@@ -31,7 +31,7 @@ extern bool g_IsNT;
 
 namespace NFsFolder {
 
-HRESULT CCopyStateIO::MyCopyFile(CFSTR inPath, CFSTR outPath)
+HRESULT CCopyStateIO::MyCopyFile(CFSTR inPath, CFSTR outPath, DWORD attrib)
 {
   ErrorFileIndex = -1;
   ErrorMessage.Empty();
@@ -75,7 +75,7 @@ HRESULT CCopyStateIO::MyCopyFile(CFSTR inPath, CFSTR outPath)
       }
       if (written != num)
       {
-        ErrorMessage = L"Write error";
+        ErrorMessage = "Write error";
         return S_OK;
       }
       CurrentSize += num;
@@ -86,6 +86,9 @@ HRESULT CCopyStateIO::MyCopyFile(CFSTR inPath, CFSTR outPath)
       }
     }
   }
+
+  if (attrib != INVALID_FILE_ATTRIBUTES)
+    SetFileAttrib(outPath, attrib);
 
   if (DeleteSrcFile)
   {
@@ -158,8 +161,6 @@ static DWORD CALLBACK CopyProgressRoutine(
   LPVOID lpData                         // from CopyFileEx
 )
 {
-  TotalFileSize = TotalFileSize;
-  // TotalBytesTransferred = TotalBytesTransferred;
   // StreamSize = StreamSize;
   // StreamBytesTransferred = StreamBytesTransferred;
   // dwStreamNumber = dwStreamNumber;
@@ -357,7 +358,7 @@ static HRESULT SendMessageError(IFolderOperationsExtractCallback *callback,
     const wchar_t *message, const FString &fileName)
 {
   UString s = message;
-  s += L" : ";
+  s += " : ";
   s += fs2us(fileName);
   return callback->ShowMessage(s);
 }
@@ -424,7 +425,9 @@ static HRESULT CopyFile_Ask(
       state2.DeleteSrcFile = state.MoveMode;
       state2.TotalSize = state.ProgressInfo.TotalSize;
       state2.StartPos = state.ProgressInfo.StartPos;
-      RINOK(state2.MyCopyFile(srcPath, destPathNew));
+
+      RINOK(state2.MyCopyFile(srcPath, destPathNew, srcFileInfo.Attrib));
+      
       if (state2.ErrorFileIndex >= 0)
       {
         if (state2.ErrorMessage.IsEmpty())
@@ -514,7 +517,8 @@ static HRESULT CopyFolder(
     return E_ABORT;
   }
 
-  CEnumerator enumerator(CombinePath(srcPath, FSTRING_ANY_MASK));
+  CEnumerator enumerator;
+  enumerator.SetDirPrefix(CombinePath(srcPath, FString()));
   
   for (;;)
   {

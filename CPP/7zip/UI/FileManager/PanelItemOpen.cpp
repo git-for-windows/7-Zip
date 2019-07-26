@@ -46,7 +46,7 @@ extern UInt64 g_RAM_Size;
 extern bool g_IsNT;
 #endif
 
-static CFSTR kTempDirPrefix = FTEXT("7zO");
+#define kTempDirPrefix FTEXT("7zO")
 
 // #define SHOW_DEBUG_INFO
 
@@ -534,23 +534,23 @@ HRESULT CPanel::OpenAsArc(IInStream *inStream,
         UString s2;
         if (!values[3].IsEmpty())
         {
-          s2 = L"Can not open the file as [" + values[3] + L"] archive";
+          s2 = "Can not open the file as [" + values[3] + "] archive";
           if (level2 != 0)
-            s2 += L"\nThe file is open as [" + values[2] + L"] archive";
+            s2 += "\nThe file is open as [" + values[2] + "] archive";
         }
         if (!values[0].IsEmpty())
         {
           if (!s2.IsEmpty())
             s2.Add_LF();
-          s2 += L"[";
+          s2 += "[";
           s2 += values[2];
-          s2 += L"] Error: ";
+          s2 += "] Error: ";
           s2 += values[0];
         }
         if (!s2.IsEmpty())
         {
           if (!s.IsEmpty())
-            s += L"--------------------\n";
+            s += "--------------------\n";
           s += values[1];
           s.Add_LF();
           s += s2;
@@ -559,11 +559,11 @@ HRESULT CPanel::OpenAsArc(IInStream *inStream,
       */
       /*
       if (!s.IsEmpty())
-        MessageBoxWarning(s);
+        MessageBox_Warning(s);
       else
       */
-      // after MessageBoxWarning it throws exception in nested archives in Debug Mode. why ?.
-        // MessageBoxWarning(L"test error");
+      // after MessageBox_Warning it throws exception in nested archives in Debug Mode. why ?.
+        // MessageBox_Warning(L"test error");
     }
   }
 
@@ -585,9 +585,10 @@ HRESULT CPanel::OpenAsArc_Msg(IInStream *inStream,
   if (res == E_ABORT)
     return res;
 
-  if (showErrorMessage && encrypted)
+  if (showErrorMessage)
+  if (encrypted || res != S_FALSE) // 17.01 : we show message also for (res != S_FALSE)
   {
-    UString message = L"Error";
+    UString message;
     if (res == S_FALSE)
     {
       message = MyFormatNew(
@@ -598,7 +599,7 @@ HRESULT CPanel::OpenAsArc_Msg(IInStream *inStream,
     }
     else
       message = HResultToMessage(res);
-    MessageBoxMyError(message);
+    MessageBox_Error(message);
   }
 
   return res;
@@ -663,13 +664,17 @@ HRESULT CPanel::OpenParentArchiveFolder()
 }
 
 
-static const char *kStartExtensions =
+static const char * const kExeExtensions =
+  " exe bat ps1 com"
+  " ";
+
+static const char * const kStartExtensions =
   #ifdef UNDER_CE
   " cab"
   #endif
-  " exe bat com"
+  " exe bat ps1 com"
   " chm"
-  " msi doc xls ppt pps wps wpt wks xlr wdb vsd pub"
+  " msi doc dot xls ppt pps wps wpt wks xlr wdb vsd pub"
 
   " docx docm dotx dotm xlsx xlsm xltx xltm xlsb xps"
   " xlam pptx pptm potx potm ppam ppsx ppsm xsn"
@@ -718,6 +723,51 @@ static bool DoItemAlwaysStart(const UString &name)
 
 UString GetQuotedString(const UString &s);
 
+
+void SplitCmdLineSmart(const UString &cmd, UString &prg, UString &params)
+{
+  params.Empty();
+  prg = cmd;
+  prg.Trim();
+  if (prg.Len() >= 2 && prg[0] == L'"')
+  {
+    int pos = prg.Find(L'"', 1);
+    if (pos >= 0)
+    {
+      if ((unsigned)pos + 1 == prg.Len() || prg[pos + 1] == ' ')
+      {
+        params = prg.Ptr(pos + 1);
+        params.Trim();
+        prg.DeleteFrom(pos);
+        prg.DeleteFrontal(1);
+      }
+    }
+  }
+}
+
+
+static WRes StartAppWithParams(const UString &cmd, const UStringVector &paramVector, CProcess &process)
+{
+  UString param;
+  UString prg;
+
+  SplitCmdLineSmart(cmd, prg, param);
+  
+  param.Trim();
+
+  // int pos = params.Find(L"%1");
+
+  FOR_VECTOR (i, paramVector)
+  {
+    if (!param.IsEmpty() && param.Back() != ' ')
+      param.Add_Space();
+    param += GetQuotedString(paramVector[i]);
+  }
+  
+  return process.Create(prg, param, NULL);
+}
+
+
 static HRESULT StartEditApplication(const UString &path, bool useEditor, HWND window, CProcess &process)
 {
   UString command;
@@ -725,7 +775,7 @@ static HRESULT StartEditApplication(const UString &path, bool useEditor, HWND wi
   if (command.IsEmpty())
   {
     #ifdef UNDER_CE
-    command = L"\\Windows\\";
+    command = "\\Windows\\";
     #else
     FString winDir;
     if (!GetWindowsDir(winDir))
@@ -733,19 +783,29 @@ static HRESULT StartEditApplication(const UString &path, bool useEditor, HWND wi
     NName::NormalizeDirPathPrefix(winDir);
     command = fs2us(winDir);
     #endif
-    command += L"notepad.exe";
+    command += "notepad.exe";
   }
 
-  HRESULT res = process.Create(command, GetQuotedString(path), NULL);
+  UStringVector params;
+  params.Add(path);
+
+  HRESULT res = StartAppWithParams(command, params, process);
   if (res != SZ_OK)
     ::MessageBoxW(window, LangString(IDS_CANNOT_START_EDITOR), L"7-Zip", MB_OK  | MB_ICONSTOP);
   return res;
 }
 
+
 void CApp::DiffFiles()
 {
   const CPanel &panel = GetFocusedPanel();
   
+  if (!panel.Is_IO_FS_Folder())
+  {
+    panel.MessageBox_Error_UnsupportOperation();
+    return;
+  }
+
   CRecordVector<UInt32> indices;
   panel.GetSelectedItemsIndices(indices);
 
@@ -758,6 +818,13 @@ void CApp::DiffFiles()
   else if (indices.Size() == 1 && NumPanels >= 2)
   {
     const CPanel &destPanel = Panels[1 - LastFocusedPanel];
+
+    if (!destPanel.Is_IO_FS_Folder())
+    {
+      panel.MessageBox_Error_UnsupportOperation();
+      return;
+    }
+
     path1 = panel.GetItemFullPath(indices[0]);
     CRecordVector<UInt32> indices2;
     destPanel.GetSelectedItemsIndices(indices2);
@@ -779,15 +846,20 @@ void CApp::DiffFiles()
   if (command.IsEmpty())
     return;
 
-  UString param = GetQuotedString(path1);
-  param.Add_Space();
-  param += GetQuotedString(path2);
+  UStringVector params;
+  params.Add(path1);
+  params.Add(path2);
 
-  HRESULT res = MyCreateProcess(command, param);
+  HRESULT res;
+  {
+    CProcess process;
+    res = StartAppWithParams(command, params, process);
+  }
   if (res == SZ_OK)
     return;
   ::MessageBoxW(_window, LangString(IDS_CANNOT_START_EDITOR), L"7-Zip", MB_OK  | MB_ICONSTOP);
 }
+
 
 #ifndef _UNICODE
 typedef BOOL (WINAPI * ShellExecuteExWP)(LPSHELLEXECUTEINFOW lpExecInfo);
@@ -802,7 +874,7 @@ static HRESULT StartApplication(const UString &dir, const UString &path, HWND wi
     int dot = path2.ReverseFind_Dot();
     int separ = path2.ReverseFind_PathSepar();
     if (dot < 0 || dot < separ)
-      path2 += L'.';
+      path2 += '.';
   }
   #endif
 
@@ -841,8 +913,8 @@ static HRESULT StartApplication(const UString &dir, const UString &path, HWND wi
       ;
     execInfo.hwnd = NULL;
     execInfo.lpVerb = NULL;
-    const CSysString sysPath = GetSystemString(path2);
-    const CSysString sysDir = GetSystemString(dir);
+    const CSysString sysPath (GetSystemString(path2));
+    const CSysString sysDir (GetSystemString(dir));
     execInfo.lpFile = sysPath;
     execInfo.lpParameters = NULL;
     execInfo.lpDirectory =
@@ -896,26 +968,35 @@ void CPanel::EditItem(int index, bool useEditor)
   StartEditApplication(GetItemFullPath(index), useEditor, (HWND)*this, process);
 }
 
+
 void CPanel::OpenFolderExternal(int index)
 {
-  UString fsPrefix = GetFsPath();
-  UString name;
+  UString prefix = GetFsPath();
+  UString path = prefix;
+
   if (index == kParentIndex)
   {
-    int pos = fsPrefix.ReverseFind_PathSepar();
-    if (pos >= 0 && pos == (int)fsPrefix.Len() - 1)
-    {
-      UString s = fsPrefix.Left(pos);
-      pos = s.ReverseFind_PathSepar();
-      if (pos >= 0)
-        fsPrefix.SetFrom(s, pos + 1);
-    }
-    name = fsPrefix;
+    if (prefix.IsEmpty())
+      return;
+    const wchar_t c = prefix.Back();
+    if (!IS_PATH_SEPAR(c) && c != ':')
+      return;
+    prefix.DeleteBack();
+    int pos = prefix.ReverseFind_PathSepar();
+    if (pos < 0)
+      return;
+    prefix.DeleteFrom(pos + 1);
+    path = prefix;
   }
   else
-    name = fsPrefix + GetItemRelPath(index) + WCHAR_PATH_SEPARATOR;
-  StartApplicationDontWait(fsPrefix, name, (HWND)*this);
+  {
+    path += GetItemRelPath(index);
+    path.Add_PathSepar();
+  }
+
+  StartApplicationDontWait(prefix, path, (HWND)*this);
 }
+
 
 bool CPanel::IsVirus_Message(const UString &name)
 {
@@ -928,12 +1009,12 @@ bool CPanel::IsVirus_Message(const UString &name)
   
   if (name2.Find(cRLO) >= 0)
   {
-    UString badString = cRLO;
+    const UString badString(cRLO);
     name2.Replace(badString, L"[RLO]");
     isVirus = true;
   }
   {
-    const wchar_t *kVirusSpaces = L"     ";
+    const wchar_t * const kVirusSpaces = L"     ";
     // const unsigned kNumSpaces = strlen(kVirusSpaces);
     for (;;)
     {
@@ -945,6 +1026,27 @@ bool CPanel::IsVirus_Message(const UString &name)
       name2.Replace(kVirusSpaces, L" ");
     }
   }
+
+  #ifdef _WIN32
+  {
+    unsigned i;
+    for (i = name2.Len(); i != 0;)
+    {
+      wchar_t c = name2[i - 1];
+      if (c != '.' && c != ' ')
+        break;
+      i--;
+      name2.ReplaceOneCharAtPos(i, '_');
+    }
+    if (i != name2.Len())
+    {
+      UString name3 = name2;
+      name3.DeleteFrom(i);
+      if (FindExt(kExeExtensions, name3))
+        isVirus = true;
+    }
+  }
+  #endif
   
   if (!isVirus)
     return false;
@@ -973,7 +1075,7 @@ bool CPanel::IsVirus_Message(const UString &name)
   s.Add_LF(); s += name2;
   s.Add_LF(); s += name3;
 
-  MessageBoxMyError(s);
+  MessageBox_Error(s);
   return true;
 }
 
@@ -983,8 +1085,9 @@ void CPanel::OpenItem(int index, bool tryInternal, bool tryExternal, const wchar
   CDisableTimerProcessing disableTimerProcessing(*this);
   UString name = GetItemRelPath2(index);
   
-  if (IsVirus_Message(name))
-    return;
+  if (tryExternal)
+    if (IsVirus_Message(name))
+      return;
 
   if (!_parentFolders.IsEmpty())
   {
@@ -1006,7 +1109,7 @@ void CPanel::OpenItem(int index, bool tryInternal, bool tryExternal, const wchar
         return;
       if (res != S_FALSE)
       {
-        MessageBoxError(res);
+        MessageBox_Error_HRESULT(res);
         return;
       }
     }
@@ -1041,14 +1144,14 @@ HRESULT CPanel::OnOpenItemChanged(UInt32 index, const wchar_t *fullFilePath,
 {
   if (!_folderOperations)
   {
-    MessageBoxErrorLang(IDS_OPERATION_IS_NOT_SUPPORTED);
+    MessageBox_Error_UnsupportOperation();
     return E_FAIL;
   }
 
   CThreadCopyFrom t;
   t.UpdateCallbackSpec = new CUpdateCallback100Imp;
   t.UpdateCallback = t.UpdateCallbackSpec;
-  t.UpdateCallbackSpec->ProgressDialog = &t.ProgressDialog;
+  t.UpdateCallbackSpec->ProgressDialog = &t;
   t.ItemIndex = index;
   t.FullPath = fullFilePath;
   t.FolderOperations = _folderOperations;
@@ -1330,7 +1433,7 @@ static THREAD_FUNC_DECL MyThreadFunction(void *param)
 
 
 #if defined(_WIN32) && !defined(UNDER_CE)
-static const FChar *k_ZoneId_StreamName = FTEXT(":Zone.Identifier");
+static const FChar * const k_ZoneId_StreamName = FTEXT(":Zone.Identifier");
 #endif
 
 
@@ -1443,7 +1546,7 @@ HRESULT CBufSeqOutStream_WithFile::FlushToFile()
     {
       outFileStream.Release();
       return E_FAIL;
-      // MessageBoxMyError(UString(L"Can't create file ") + fs2us(tempFilePath));
+      // MessageBoxMyError(UString("Can't create file ") + fs2us(tempFilePath));
     }
   }
   while (_fileWritePos != _pos)
@@ -1494,12 +1597,13 @@ void CPanel::OpenItemInArchive(int index, bool tryInternal, bool tryExternal, bo
   const UString name = GetItemName(index);
   const UString relPath = GetItemRelPath(index);
   
-  if (IsVirus_Message(name))
-    return;
+  if (tryExternal)
+    if (IsVirus_Message(name))
+      return;
 
   if (!_folderOperations)
   {
-    MessageBoxErrorLang(IDS_OPERATION_IS_NOT_SUPPORTED);
+    MessageBox_Error_UnsupportOperation();
     return;
   }
 
@@ -1510,7 +1614,7 @@ void CPanel::OpenItemInArchive(int index, bool tryInternal, bool tryExternal, bo
   CTempDir tempDirectory;
   if (!tempDirectory.Create(kTempDirPrefix))
   {
-    MessageBoxLastError();
+    MessageBox_LastError();
     return;
   }
   
@@ -1639,7 +1743,7 @@ void CPanel::OpenItemInArchive(int index, bool tryInternal, bool tryExternal, bo
   if (result != S_OK)
   {
     if (result != E_ABORT)
-      MessageBoxError(result);
+      MessageBox_Error_HRESULT(result);
     return;
   }
 

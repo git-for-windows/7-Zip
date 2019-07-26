@@ -3,7 +3,7 @@
 #ifndef __CRYPTO_ZIP_STRONG_H
 #define __CRYPTO_ZIP_STRONG_H
 
-#include "../../Common/MyBuffer.h"
+#include "../../Common/MyBuffer2.h"
 
 #include "../IPassword.h"
 
@@ -35,12 +35,13 @@ class CBaseCoder:
 {
 protected:
   CKeyInfo _key;
-  CByteBuffer _buf;
-  Byte *_bufAligned;
+  CAlignedBuffer _bufAligned;
 public:
   STDMETHOD(Init)();
   STDMETHOD(CryptoSetPassword)(const Byte *data, UInt32 size);
 };
+
+const unsigned kAesPadAllign = AES_BLOCK_SIZE;
 
 class CDecoder: public CBaseCoder
 {
@@ -51,6 +52,12 @@ public:
   MY_UNKNOWN_IMP1(ICryptoSetPassword)
   HRESULT ReadHeader(ISequentialInStream *inStream, UInt32 crc, UInt64 unpackSize);
   HRESULT Init_and_CheckPassword(bool &passwOK);
+  UInt32 GetPadSize(UInt32 packSize32) const
+  {
+    // Padding is to align to blockSize of cipher.
+    // Change it, if is not AES
+    return kAesPadAllign - (packSize32 & (kAesPadAllign - 1));
+  }
 };
 
 }}

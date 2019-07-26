@@ -68,7 +68,7 @@ HWND CPanel::GetParent()
   return (h == 0) ? _mainWindow : h;
 }
 
-static LPCWSTR kClassName = L"7-Zip::Panel";
+#define kClassName L"7-Zip::Panel"
 
 
 HRESULT CPanel::Create(HWND mainWindow, HWND parentWindow, UINT id,
@@ -697,43 +697,57 @@ bool CPanel::OnCommand(int code, int itemID, LPARAM lParam, LRESULT &result)
   return CWindow2::OnCommand(code, itemID, lParam, result);
 }
 
-void CPanel::MessageBoxInfo(LPCWSTR message, LPCWSTR caption)
+
+
+/*
+void CPanel::MessageBox_Info(LPCWSTR message, LPCWSTR caption) const
   { ::MessageBoxW((HWND)*this, message, caption, MB_OK); }
-void CPanel::MessageBox(LPCWSTR message, LPCWSTR caption)
+void CPanel::MessageBox_Warning(LPCWSTR message) const
+  { ::MessageBoxW((HWND)*this, message, L"7-Zip", MB_OK | MB_ICONWARNING); }
+*/
+
+void CPanel::MessageBox_Error_Caption(LPCWSTR message, LPCWSTR caption) const
   { ::MessageBoxW((HWND)*this, message, caption, MB_OK | MB_ICONSTOP); }
-void CPanel::MessageBox(LPCWSTR message)
-  { MessageBox(message, L"7-Zip"); }
-void CPanel::MessageBoxWarning(LPCWSTR message)
-  { ::MessageBoxW(NULL, message, L"7-Zip", MB_OK | MB_ICONWARNING); }
-void CPanel::MessageBoxMyError(LPCWSTR message)
-  { MessageBox(message, L"7-Zip"); }
 
+void CPanel::MessageBox_Error(LPCWSTR message) const
+  { MessageBox_Error_Caption(message, L"7-Zip"); }
 
-void CPanel::MessageBoxError(HRESULT errorCode, LPCWSTR caption)
+static UString ErrorHResult_To_Message(HRESULT errorCode)
 {
-  MessageBox(HResultToMessage(errorCode), caption);
+  if (errorCode == 0)
+    errorCode = E_FAIL;
+  return HResultToMessage(errorCode);
 }
 
-void CPanel::MessageBoxError2Lines(LPCWSTR message, HRESULT errorCode)
+void CPanel::MessageBox_Error_HRESULT_Caption(HRESULT errorCode, LPCWSTR caption) const
+{
+  MessageBox_Error_Caption(ErrorHResult_To_Message(errorCode), caption);
+}
+
+void CPanel::MessageBox_Error_HRESULT(HRESULT errorCode) const
+  { MessageBox_Error_HRESULT_Caption(errorCode, L"7-Zip"); }
+
+void CPanel::MessageBox_Error_2Lines_Message_HRESULT(LPCWSTR message, HRESULT errorCode) const
 {
   UString m = message;
-  if (errorCode != 0)
-  {
-    m.Add_LF();
-    m += HResultToMessage(errorCode);
-  }
-  MessageBoxMyError(m);
+  m.Add_LF();
+  m += ErrorHResult_To_Message(errorCode);
+  MessageBox_Error(m);
 }
 
-void CPanel::MessageBoxError(HRESULT errorCode)
-  { MessageBoxError(errorCode, L"7-Zip"); }
-void CPanel::MessageBoxLastError(LPCWSTR caption)
-  { MessageBoxError(::GetLastError(), caption); }
-void CPanel::MessageBoxLastError()
-  { MessageBoxLastError(L"7-Zip"); }
+void CPanel::MessageBox_LastError(LPCWSTR caption) const
+  { MessageBox_Error_HRESULT_Caption(::GetLastError(), caption); }
 
-void CPanel::MessageBoxErrorLang(UINT resourceID)
-  { MessageBox(LangString(resourceID)); }
+void CPanel::MessageBox_LastError() const
+  { MessageBox_LastError(L"7-Zip"); }
+
+void CPanel::MessageBox_Error_LangID(UINT resourceID) const
+  { MessageBox_Error(LangString(resourceID)); }
+
+void CPanel::MessageBox_Error_UnsupportOperation() const
+  { MessageBox_Error_LangID(IDS_OPERATION_IS_NOT_SUPPORTED); }
+
+
 
 
 void CPanel::SetFocusToList()
@@ -821,7 +835,7 @@ void CPanel::ChangeFlatMode()
     _flatModeForArc = _flatMode;
   else
     _flatModeForDisk = _flatMode;
-  RefreshListCtrlSaveFocused();
+  RefreshListCtrl_SaveFocused();
 }
 
 /*
@@ -848,12 +862,12 @@ void CPanel::AddToArchive()
   GetOperatedItemIndices(indices);
   if (!Is_IO_FS_Folder())
   {
-    MessageBoxErrorLang(IDS_OPERATION_IS_NOT_SUPPORTED);
+    MessageBox_Error_UnsupportOperation();
     return;
   }
   if (indices.Size() == 0)
   {
-    MessageBoxErrorLang(IDS_SELECT_FILES);
+    MessageBox_Error_LangID(IDS_SELECT_FILES);
     return;
   }
   UStringVector names;
@@ -865,15 +879,16 @@ void CPanel::AddToArchive()
 
   FOR_VECTOR (i, indices)
     names.Add(curPrefix + GetItemRelPath2(indices[i]));
-  bool fromPrev = (names.Size() > 1);
-  const UString arcName = CreateArchiveName(names.Front(), fromPrev, false);
+  
+  const UString arcName = CreateArchiveName(names);
+  
   HRESULT res = CompressFiles(destCurDirPrefix, arcName, L"",
       true, // addExtension
       names, false, true, false);
   if (res != S_OK)
   {
     if (destCurDirPrefix.Len() >= MAX_PATH)
-      MessageBoxErrorLang(IDS_MESSAGE_UNSUPPORTED_OPERATION_FOR_LONG_PATH_FOLDER);
+      MessageBox_Error_LangID(IDS_MESSAGE_UNSUPPORTED_OPERATION_FOR_LONG_PATH_FOLDER);
   }
   // KillSelection();
 }
@@ -910,7 +925,7 @@ void CPanel::GetFilePaths(const CRecordVector<UInt32> &indices, UStringVector &p
   }
   if (paths.Size() == 0)
   {
-    MessageBoxErrorLang(IDS_SELECT_FILES);
+    MessageBox_Error_LangID(IDS_SELECT_FILES);
     return;
   }
 }
@@ -933,7 +948,7 @@ void CPanel::ExtractArchives()
   if (indices.Size() == 1)
     outFolder += GetSubFolderNameForExtract2(GetItemRelPath(indices[0]));
   else
-    outFolder += L'*';
+    outFolder += '*';
   outFolder.Add_PathSepar();
   
   ::ExtractArchives(paths, outFolder
@@ -947,9 +962,9 @@ static void AddValuePair(UINT resourceID, UInt64 value, UString &s)
 {
   AddLangString(s, resourceID);
   char sz[32];
-  s += L": ";
+  s += ": ";
   ConvertUInt64ToString(value, sz);
-  s.AddAsciiStr(sz);
+  s += sz;
   s.Add_LF();
 }
 */
@@ -999,11 +1014,11 @@ static void AddSizePair(UInt32 langID, UInt64 value, UString &s)
   AddLangString(s, langID);
   s += L' ';
   ConvertUInt64ToString(value, sz);
-  s.AddAsciiStr(sz);
+  s += sz;
   ConvertUInt64ToString(value >> 20, sz);
-  s.AddAsciiStr(" (");
-  s.AddAsciiStr(sz);
-  s.AddAsciiStr(" MB)");
+  s += " (";
+  s += sz;
+  s += " MB)";
   s.Add_LF();
 }
 */
@@ -1026,7 +1041,7 @@ void CPanel::TestArchives()
     if (res != S_OK)
     {
       if (res != E_ABORT)
-        MessageBoxError(res);
+        MessageBox_Error_HRESULT(res);
     }
     return;
 
@@ -1051,11 +1066,10 @@ void CPanel::TestArchives()
     extracter.Indices = indices;
     
     UString title = LangString(IDS_PROGRESS_TESTING);
-    UString progressWindowTitle = L"7-Zip"; // LangString(IDS_APP_TITLE);
     
     extracter.ProgressDialog.CompressingMode = false;
     extracter.ProgressDialog.MainWindow = GetParent();
-    extracter.ProgressDialog.MainTitle = progressWindowTitle;
+    extracter.ProgressDialog.MainTitle = "7-Zip"; // LangString(IDS_APP_TITLE);
     extracter.ProgressDialog.MainAddTitle = title + L' ';
     
     extracter.ExtractCallbackSpec->OverwriteMode = NExtract::NOverwriteMode::kAskBefore;
@@ -1072,7 +1086,7 @@ void CPanel::TestArchives()
 
   if (!IsFSFolder())
   {
-    MessageBoxErrorLang(IDS_OPERATION_IS_NOT_SUPPORTED);
+    MessageBox_Error_UnsupportOperation();
     return;
   }
   UStringVector paths;

@@ -1,10 +1,10 @@
-// CompressCall.cpp
+// CompressCall2.cpp
 
 #include "StdAfx.h"
 
 #include "../../../Common/MyException.h"
 
-#include "../../UI/common/ArchiveCommandLine.h"
+#include "../../UI/Common/EnumDirItems.h"
 
 #include "../../UI/GUI/BenchmarkDialog.h"
 #include "../../UI/GUI/ExtractGUI.h"
@@ -20,6 +20,7 @@ extern HWND g_HWND;
 #define MY_TRY_BEGIN  HRESULT result; try {
 #define MY_TRY_FINISH } \
   catch(CSystemException &e) { result = e.ErrorCode; } \
+  catch(UString &s) { ErrorMessage(s); result = E_FAIL; } \
   catch(...) { result = E_FAIL; } \
   if (result != S_OK && result != E_ABORT) \
     ErrorMessageHRESULT(result);
@@ -59,9 +60,9 @@ static void ThrowException_if_Error(HRESULT res)
  
 UString GetQuotedString(const UString &s)
 {
-  UString s2 = L'\"';
+  UString s2 ('\"');
   s2 += s;
-  s2 += L'\"';
+  s2 += '\"';
   return s2;
 }
 
@@ -145,6 +146,7 @@ HRESULT CompressFiles(
   return S_OK;
 }
 
+
 static HRESULT ExtractGroupCommand(const UStringVector &arcPaths,
     bool showDialog, const UString &outFolder, bool testMode, bool elimDup = false)
 {
@@ -192,10 +194,14 @@ static HRESULT ExtractGroupCommand(const UStringVector &arcPaths,
   censor.AddPathsToCensor(NWildcard::k_RelatPath);
 
   bool messageWasDisplayed = false;
+
+  ecs->MultiArcMode = (arcPathsSorted.Size() > 1);
+
   result = ExtractGUI(codecs,
       formatIndices, CIntVector(),
       arcPathsSorted, arcFullPathsSorted,
       censor.Pairs.Front().Head, eo, NULL, showDialog, messageWasDisplayed, ecs, g_HWND);
+
   if (result != S_OK)
   {
     if (result != E_ABORT && messageWasDisplayed)
@@ -260,8 +266,8 @@ void Benchmark(bool totalMode)
   if (totalMode)
   {
     CProperty prop;
-    prop.Name = L"m";
-    prop.Value = L"*";
+    prop.Name = "m";
+    prop.Value = "*";
     props.Add(prop);
   }
   result = Benchmark(EXTERNAL_CODECS_VARS_L props, g_HWND);

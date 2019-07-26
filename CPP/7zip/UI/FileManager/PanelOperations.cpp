@@ -79,10 +79,10 @@ HRESULT CThreadFolderOperations::DoOperation(CPanel &panel, const UString &progr
 {
   UpdateCallbackSpec = new CUpdateCallback100Imp;
   UpdateCallback = UpdateCallbackSpec;
-  UpdateCallbackSpec->ProgressDialog = &ProgressDialog;
+  UpdateCallbackSpec->ProgressDialog = this;
 
-  ProgressDialog.WaitMode = true;
-  ProgressDialog.Sync.FinalMessage.ErrorMessage.Title = titleError;
+  WaitMode = true;
+  Sync.FinalMessage.ErrorMessage.Title = titleError;
   Result = S_OK;
 
   UpdateCallbackSpec->Init();
@@ -95,11 +95,11 @@ HRESULT CThreadFolderOperations::DoOperation(CPanel &panel, const UString &progr
   }
 
 
-  ProgressDialog.MainWindow = panel._mainWindow; // panel.GetParent()
-  ProgressDialog.MainTitle = L"7-Zip"; // LangString(IDS_APP_TITLE);
-  ProgressDialog.MainAddTitle = progressTitle + L' ';
+  MainWindow = panel._mainWindow; // panel.GetParent()
+  MainTitle = "7-Zip"; // LangString(IDS_APP_TITLE);
+  MainAddTitle = progressTitle + L' ';
 
-  RINOK(Create(progressTitle, ProgressDialog.MainWindow));
+  RINOK(Create(progressTitle, MainWindow));
   return Result;
 }
 
@@ -111,9 +111,9 @@ typedef int (WINAPI * SHFileOperationWP)(LPSHFILEOPSTRUCTW lpFileOp);
 void CPanel::MessageBoxErrorForUpdate(HRESULT errorCode, UINT resourceID)
 {
   if (errorCode == E_NOINTERFACE)
-    MessageBoxErrorLang(IDS_OPERATION_IS_NOT_SUPPORTED);
+    MessageBox_Error_UnsupportOperation();
   else
-    MessageBoxError(errorCode, LangString(resourceID));
+    MessageBox_Error_HRESULT_Caption(errorCode, LangString(resourceID));
 }
 */
 
@@ -138,7 +138,7 @@ void CPanel::DeleteItems(bool NON_CE_VAR(toRecycleBin))
       CDynamicBuffer<CHAR> buffer;
       FOR_VECTOR (i, indices)
       {
-        const AString path = GetSystemString(GetItemFullPath(indices[i]));
+        const AString path (GetSystemString(GetItemFullPath(indices[i])));
         buffer.AddData(path, path.Len() + 1);
       }
       *buffer.GetCurPtrAndGrow(1) = 0;
@@ -178,7 +178,7 @@ void CPanel::DeleteItems(bool NON_CE_VAR(toRecycleBin))
       {
         if (toRecycleBin)
         {
-          MessageBoxErrorLang(IDS_ERROR_LONG_PATH_TO_RECYCLE);
+          MessageBox_Error_LangID(IDS_ERROR_LONG_PATH_TO_RECYCLE);
           return;
         }
         useInternalDelete = true;
@@ -210,7 +210,7 @@ void CPanel::DeleteItems(bool NON_CE_VAR(toRecycleBin))
     }
     /*
     if (fo.fAnyOperationsAborted)
-      MessageBoxError(result, LangString(IDS_ERROR_DELETING, 0x03020217));
+      MessageBox_Error_HRESULT_Caption(result, LangString(IDS_ERROR_DELETING));
     */
     if (!useInternalDelete)
     {
@@ -301,7 +301,7 @@ BOOL CPanel::OnEndLabelEdit(LV_DISPINFOW * lpnmh)
   UString newName = lpnmh->item.pszText;
   if (!IsCorrectFsName(newName))
   {
-    MessageBoxError(E_INVALIDARG);
+    MessageBox_Error_HRESULT(E_INVALIDARG);
     return FALSE;
   }
 
@@ -310,7 +310,7 @@ BOOL CPanel::OnEndLabelEdit(LV_DISPINFOW * lpnmh)
     UString correctName;
     if (!CorrectFsPath(newName, correctName))
     {
-      MessageBoxError(E_INVALIDARG);
+      MessageBox_Error_HRESULT(E_INVALIDARG);
       return FALSE;
     }
     newName = correctName;
@@ -344,6 +344,7 @@ BOOL CPanel::OnEndLabelEdit(LV_DISPINFOW * lpnmh)
   // Can't use RefreshListCtrl here.
   // RefreshListCtrlSaveFocused();
   _selectedState.FocusedName = prefix + newName;
+  _selectedState.FocusedName_Defined = true;
   _selectedState.SelectFocused = true;
 
   // We need clear all items to disable GetText before Reload:
@@ -375,7 +376,7 @@ void CPanel::CreateFolder()
   
   if (!IsCorrectFsName(newName))
   {
-    MessageBoxError(E_INVALIDARG);
+    MessageBox_Error_HRESULT(E_INVALIDARG);
     return;
   }
 
@@ -384,7 +385,7 @@ void CPanel::CreateFolder()
     UString correctName;
     if (!CorrectFsPath(newName, correctName))
     {
-      MessageBoxError(E_INVALIDARG);
+      MessageBox_Error_HRESULT(E_INVALIDARG);
       return;
     }
     newName = correctName;
@@ -413,6 +414,7 @@ void CPanel::CreateFolder()
     if (!_mySelectMode)
       state.SelectedNames.Clear();
     state.FocusedName = newName;
+    state.FocusedName_Defined = true;
     state.SelectFocused = true;
   }
   RefreshTitleAlways();
@@ -444,7 +446,7 @@ void CPanel::CreateFile()
     UString correctName;
     if (!CorrectFsPath(newName, correctName))
     {
-      MessageBoxError(E_INVALIDARG);
+      MessageBox_Error_HRESULT(E_INVALIDARG);
       return;
     }
     newName = correctName;
@@ -453,7 +455,7 @@ void CPanel::CreateFile()
   HRESULT result = _folderOperations->CreateFile(newName, 0);
   if (result != S_OK)
   {
-    MessageBoxError(result, LangString(IDS_CREATE_FILE_ERROR));
+    MessageBox_Error_HRESULT_Caption(result, LangString(IDS_CREATE_FILE_ERROR));
     // MessageBoxErrorForUpdate(result, IDS_CREATE_FILE_ERROR);
     return;
   }
@@ -463,6 +465,7 @@ void CPanel::CreateFile()
   if (!_mySelectMode)
     state.SelectedNames.Clear();
   state.FocusedName = newName;
+  state.FocusedName_Defined = true;
   state.SelectFocused = true;
   RefreshListCtrl(state);
 }
@@ -502,7 +505,7 @@ void CPanel::ChangeComment()
   UString name = GetItemRelPath2(realIndex);
   CComboDialog dlg;
   dlg.Title = name;
-  dlg.Title += L" : ";
+  dlg.Title += " : ";
   AddLangString(dlg.Title, IDS_COMMENT);
   dlg.Value = comment;
   LangString(IDS_COMMENT2, dlg.Static);
@@ -515,9 +518,9 @@ void CPanel::ChangeComment()
   if (result != S_OK)
   {
     if (result == E_NOINTERFACE)
-      MessageBoxErrorLang(IDS_OPERATION_IS_NOT_SUPPORTED);
+      MessageBox_Error_UnsupportOperation();
     else
-      MessageBoxError(result, L"Set Comment Error");
+      MessageBox_Error_HRESULT_Caption(result, L"Set Comment Error");
   }
   RefreshListCtrl(state);
 }

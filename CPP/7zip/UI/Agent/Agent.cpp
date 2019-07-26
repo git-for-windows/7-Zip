@@ -523,6 +523,21 @@ static const wchar_t *GetExtension(const wchar_t *name)
   }
 }
 
+
+int CAgentFolder::CompareItems3(UInt32 index1, UInt32 index2, PROPID propID)
+{
+  NCOM::CPropVariant prop1, prop2;
+  // Name must be first property
+  GetProperty(index1, propID, &prop1);
+  GetProperty(index2, propID, &prop2);
+  if (prop1.vt != prop2.vt)
+    return MyCompare(prop1.vt, prop2.vt);
+  if (prop1.vt == VT_BSTR)
+    return MyStringCompareNoCase(prop1.bstrVal, prop2.bstrVal);
+  return prop1.Compare(prop2);
+}
+
+
 int CAgentFolder::CompareItems2(UInt32 index1, UInt32 index2, PROPID propID, Int32 propIsRaw)
 {
   unsigned realIndex1, realIndex2;
@@ -651,20 +666,9 @@ int CAgentFolder::CompareItems2(UInt32 index1, UInt32 index2, PROPID propID, Int
   if (propIsRaw)
     return CompareRawProps(_agentSpec->_archiveLink.GetArchiveGetRawProps(), arcIndex1, arcIndex2, propID);
 
-  NCOM::CPropVariant prop1, prop2;
-  // Name must be first property
-  GetProperty(index1, propID, &prop1);
-  GetProperty(index2, propID, &prop2);
-  if (prop1.vt != prop2.vt)
-  {
-    return MyCompare(prop1.vt, prop2.vt);
-  }
-  if (prop1.vt == VT_BSTR)
-  {
-    return _wcsicmp(prop1.bstrVal, prop2.bstrVal);
-  }
-  return prop1.Compare(prop2);
+  return CompareItems3(index1, index2, propID);
 }
+
 
 STDMETHODIMP_(Int32) CAgentFolder::CompareItems(UInt32 index1, UInt32 index2, PROPID propID, Int32 propIsRaw)
 {
@@ -811,22 +815,11 @@ STDMETHODIMP_(Int32) CAgentFolder::CompareItems(UInt32 index1, UInt32 index2, PR
     return CompareRawProps(_agentSpec->_archiveLink.GetArchiveGetRawProps(), arcIndex1, arcIndex2, propID);
   }
 
-  NCOM::CPropVariant prop1, prop2;
-  // Name must be first property
-  GetProperty(index1, propID, &prop1);
-  GetProperty(index2, propID, &prop2);
-  if (prop1.vt != prop2.vt)
-  {
-    return MyCompare(prop1.vt, prop2.vt);
-  }
-  if (prop1.vt == VT_BSTR)
-  {
-    return _wcsicmp(prop1.bstrVal, prop2.bstrVal);
-  }
-  return prop1.Compare(prop2);
+  return CompareItems3(index1, index2, propID);
 
   } catch(...) { return 0; }
 }
+
 
 HRESULT CAgentFolder::BindToFolder_Internal(unsigned proxyDirIndex, IFolderFolder **resultFolder)
 {
@@ -1224,7 +1217,12 @@ STDMETHODIMP CAgentFolder::GetFolderProperty(PROPID propID, PROPVARIANT *value)
   NWindows::NCOM::CPropVariant prop;
 
   if (propID == kpidReadOnly)
-    prop = _agentSpec->IsThereReadOnlyArc();
+  {
+    if (_agentSpec->Is_Attrib_ReadOnly())
+      prop = true;
+    else
+      prop = _agentSpec->IsThereReadOnlyArc();
+  }
   else if (_proxy2)
   {
     const CProxyDir2 &dir = _proxy2->Dirs[_proxyDirIndex];
@@ -1246,7 +1244,7 @@ STDMETHODIMP CAgentFolder::GetFolderProperty(PROPID propID, PROPVARIANT *value)
       case kpidNumSubFiles:  prop = dir.NumSubFiles; break;
         // case kpidName:         prop = dir.Name; break;
       // case kpidPath:         prop = _proxy2->GetFullPathPrefix(_proxyDirIndex); break;
-      case kpidType: prop = UString(L"7-Zip.") + _agentSpec->ArchiveType; break;
+      case kpidType: prop = UString("7-Zip.") + _agentSpec->ArchiveType; break;
       case kpidCRC: if (dir.CrcIsDefined) prop = dir.Crc; break;
     }
     
@@ -1262,7 +1260,7 @@ STDMETHODIMP CAgentFolder::GetFolderProperty(PROPID propID, PROPVARIANT *value)
     case kpidNumSubFiles:  prop = dir.NumSubFiles; break;
     case kpidName:         prop = dir.Name; break;
     case kpidPath:         prop = _proxy->GetDirPath_as_Prefix(_proxyDirIndex); break;
-    case kpidType: prop = UString(L"7-Zip.") + _agentSpec->ArchiveType; break;
+    case kpidType: prop = UString("7-Zip.") + _agentSpec->ArchiveType; break;
     case kpidCRC: if (dir.CrcIsDefined) prop = dir.Crc; break;
   }
   }
@@ -1460,7 +1458,12 @@ STDMETHODIMP CAgentFolder::Extract(const UInt32 *indices,
     pathMode = NExtract::NPathMode::kNoPathnames;
   */
 
-  extractCallbackSpec->InitForMulti(false, pathMode, overwriteMode);
+  extractCallbackSpec->InitForMulti(
+      false, // multiArchives
+      pathMode,
+      overwriteMode,
+      true  // keepEmptyDirPrefixes
+      );
 
   if (extractCallback2)
     extractCallback2->SetTotal(_agentSpec->GetArc().GetEstmatedPhySize());
@@ -1509,11 +1512,18 @@ STDMETHODIMP CAgentFolder::Extract(const UInt32 *indices,
     
   #endif
 
-  HRESULT result = _agentSpec->GetArchive()->Extract(&realIndices.Front(),
-      realIndices.Size(), testMode, extractCallback);
-  if (result == S_OK)
-    result = extractCallbackSpec->SetDirsTimes();
-  return result;
+  {
+    CArchiveExtractCallback_Closer ecsCloser(extractCallbackSpec);
+    
+    HRESULT res = _agentSpec->GetArchive()->Extract(&realIndices.Front(),
+        realIndices.Size(), testMode, extractCallback);
+    
+    HRESULT res2 = ecsCloser.Close();
+    if (res == S_OK)
+      res = res2;
+    return res;
+  }
+
   COM_TRY_END
 }
 
@@ -1559,6 +1569,7 @@ STDMETHODIMP CAgent::Open(
 {
   COM_TRY_BEGIN
   _archiveFilePath = filePath;
+  _attrib = 0;
   NFile::NFind::CFileInfo fi;
   _isDeviceFile = false;
   if (!inStream)
@@ -1567,6 +1578,7 @@ STDMETHODIMP CAgent::Open(
       return ::GetLastError();
     if (fi.IsDir())
       return E_FAIL;
+    _attrib = fi.Attrib;
     _isDeviceFile = fi.IsDevice;
   }
   CArcInfoEx archiverInfo0, archiverInfo1;
@@ -1582,9 +1594,9 @@ STDMETHODIMP CAgent::Open(
   if (Read_ShowDeleted())
   {
     COptionalOpenProperties &optPair = optProps.AddNew();
-    optPair.FormatName = L"ntfs";
-    // optPair.Props.AddNew().Name = L"LS";
-    optPair.Props.AddNew().Name = L"LD";
+    optPair.FormatName = "ntfs";
+    // optPair.Props.AddNew().Name = "LS";
+    optPair.Props.AddNew().Name = "LD";
   }
   */
 
@@ -1724,7 +1736,12 @@ STDMETHODIMP CAgent::Extract(
   COM_TRY_BEGIN
   CArchiveExtractCallback *extractCallbackSpec = new CArchiveExtractCallback;
   CMyComPtr<IArchiveExtractCallback> extractCallback = extractCallbackSpec;
-  extractCallbackSpec->InitForMulti(false, pathMode, overwriteMode);
+  extractCallbackSpec->InitForMulti(
+      false, // multiArchives
+      pathMode,
+      overwriteMode,
+      true  // keepEmptyDirPrefixes
+      );
 
   CExtractNtOptions extractNtOptions;
   extractNtOptions.AltStreams.Val = true; // change it!!!

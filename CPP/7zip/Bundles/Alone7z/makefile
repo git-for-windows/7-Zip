@@ -1,10 +1,6 @@
 PROG = 7zr.exe
-MY_CONSOLE = 1
-CFLAGS = $(CFLAGS) -DPROG_VARIANT_R
-
-!IFNDEF UNDER_CE
-CFLAGS = $(CFLAGS) -DWIN_LONG_PATH
-!ENDIF
+CFLAGS = $(CFLAGS) \
+  -DPROG_VARIANT_R \
 
 COMMON_OBJS = \
   $O\CommandLineParser.obj \
@@ -22,6 +18,7 @@ COMMON_OBJS = \
   $O\UTFConvert.obj \
   $O\MyVector.obj \
   $O\Wildcard.obj \
+  $O\XzCrc64Init.obj \
   $O\XzCrc64Reg.obj \
 
 WIN_OBJS = \
@@ -32,6 +29,7 @@ WIN_OBJS = \
   $O\FileIO.obj \
   $O\FileLink.obj \
   $O\FileName.obj \
+  $O\FileSystem.obj \
   $O\MemoryLock.obj \
   $O\PropVariant.obj \
   $O\PropVariantConv.obj \
@@ -109,6 +107,8 @@ COMPRESS_OBJS = \
   $O\LzmaDecoder.obj \
   $O\LzmaEncoder.obj \
   $O\LzmaRegister.obj \
+  $O\XzDecoder.obj \
+  $O\XzEncoder.obj \
 
 CRYPTO_OBJS = \
   $O\7zAes.obj \
@@ -130,10 +130,12 @@ C_OBJS = \
   $O\LzFind.obj \
   $O\LzFindMt.obj \
   $O\Lzma2Dec.obj \
+  $O\Lzma2DecMt.obj \
   $O\Lzma2Enc.obj \
   $O\LzmaDec.obj \
   $O\LzmaEnc.obj \
   $O\MtCoder.obj \
+  $O\MtDec.obj \
   $O\Sha256.obj \
   $O\Sort.obj \
   $O\Threads.obj \
@@ -147,5 +149,6 @@ C_OBJS = \
 !include "../../Aes.mak"
 !include "../../Crc.mak"
 !include "../../Crc64.mak"
+!include "../../LzmaDec.mak"
 
 !include "../../7zip.mak"

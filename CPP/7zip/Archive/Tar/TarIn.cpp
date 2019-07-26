@@ -26,24 +26,25 @@ static void MyStrNCpy(char *dest, const char *src, unsigned size)
   }
 }
 
-static bool OctalToNumber(const char *srcString, unsigned size, UInt64 &res)
+static bool OctalToNumber(const char *srcString, unsigned size, UInt64 &res, bool allowEmpty = false)
 {
+  res = 0;
   char sz[32];
   MyStrNCpy(sz, srcString, size);
   sz[size] = 0;
   const char *end;
   unsigned i;
   for (i = 0; sz[i] == ' '; i++);
+  if (sz[i] == 0)
+    return allowEmpty;
   res = ConvertOctStringToUInt64(sz + i, &end);
-  if (end == sz + i)
-    return false;
   return (*end == ' ' || *end == 0);
 }
 
-static bool OctalToNumber32(const char *srcString, unsigned size, UInt32 &res)
+static bool OctalToNumber32(const char *srcString, unsigned size, UInt32 &res, bool allowEmpty = false)
 {
   UInt64 res64;
-  if (!OctalToNumber(srcString, size, res64))
+  if (!OctalToNumber(srcString, size, res64, allowEmpty))
     return false;
   res = (UInt32)res64;
   return (res64 <= 0xFFFFFFFF);
@@ -91,6 +92,18 @@ static bool ParseInt64(const char *p, Int64 &val)
   return res;
 }
 
+static bool ParseInt64_MTime(const char *p, Int64 &val)
+{
+  // rare case tar : ZEROs in Docker-Windows TARs
+  // rare case tar : spaces
+  if (GetUi32(p) != 0)
+  for (unsigned i = 0; i < 12; i++)
+    if (p[i] != ' ')
+      return ParseInt64(p, val);
+  val = 0;
+  return true;
+}
+
 static bool ParseSize(const char *p, UInt64 &val)
 {
   if (GetBe32(p) == (UInt32)1 << 31)
@@ -113,7 +126,8 @@ API_FUNC_IsArc IsArc_Tar(const Byte *p2, size_t size)
   p += NFileHeader::kNameSize;
 
   UInt32 mode;
-  CHECK(OctalToNumber32(p, 8, mode)); p += 8;
+  // we allow empty Mode value for LongName prefix items
+  CHECK(OctalToNumber32(p, 8, mode, true)); p += 8;
 
   // if (!OctalToNumber32(p, 8, item.UID)) item.UID = 0;
   p += 8;
@@ -124,7 +138,7 @@ API_FUNC_IsArc IsArc_Tar(const Byte *p2, size_t size)
   Int64 time;
   UInt32 checkSum;
   CHECK(ParseSize(p, packSize)); p += 12;
-  CHECK(ParseInt64(p, time)); p += 12;
+  CHECK(ParseInt64_MTime(p, time)); p += 12;
   CHECK(OctalToNumber32(p, 8, checkSum));
   return k_IsArc_Res_YES;
 }
@@ -184,7 +198,8 @@ static HRESULT GetNextItemReal(ISequentialInStream *stream, bool &filled, CItemE
       (item.Name.Len() == NFileHeader::kNameSize ||
        item.Name.Len() == NFileHeader::kNameSize - 1);
 
-  RIF(OctalToNumber32(p, 8, item.Mode)); p += 8;
+  // we allow empty Mode value for LongName prefix items
+  RIF(OctalToNumber32(p, 8, item.Mode, true)); p += 8;
 
   if (!OctalToNumber32(p, 8, item.UID)) item.UID = 0; p += 8;
   if (!OctalToNumber32(p, 8, item.GID)) item.GID = 0; p += 8;
@@ -192,7 +207,7 @@ static HRESULT GetNextItemReal(ISequentialInStream *stream, bool &filled, CItemE
   RIF(ParseSize(p, item.PackSize));
   item.Size = item.PackSize;
   p += 12;
-  RIF(ParseInt64(p, item.MTime)); p += 12;
+  RIF(ParseInt64_MTime(p, item.MTime)); p += 12;
   
   UInt32 checkSum;
   RIF(OctalToNumber32(p, 8, checkSum));
@@ -428,14 +443,14 @@ HRESULT ReadItem(ISequentialInStream *stream, bool &filled, CItemEx &item, EErro
       case 'X':
       {
         // pax Extended Header
-        if (item.Name.IsPrefixedBy("PaxHeader/"))
+        if (item.Name.IsPrefixedBy("PaxHeader/")
+            || item.Name.Find("PaxHeaders.4467/") >= 0)
         {
           RINOK(ReadDataToString(stream, item, pax, error));
           if (error != k_ErrorType_OK)
             return S_OK;
           continue;
         }
-       
         break;
       }
       case NFileHeader::NLinkFlag::kDumpDir:
@@ -473,7 +488,11 @@ HRESULT ReadItem(ISequentialInStream *stream, bool &filled, CItemEx &item, EErro
       if (ParsePaxLongName(pax, name))
         item.Name = name;
       else
-        error = k_ErrorType_Warning;
+      {
+        // no "path" property is allowed in pax4467
+        // error = k_ErrorType_Warning;
+      }
+      pax.Empty();
     }
 
     return S_OK;

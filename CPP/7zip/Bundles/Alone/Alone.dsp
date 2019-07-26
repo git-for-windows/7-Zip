@@ -410,6 +410,10 @@ SOURCE=..\..\..\Common\Wildcard.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Common\XzCrc64Init.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\Common\XzCrc64Reg.cpp
 # End Source File
 # End Group
@@ -511,6 +515,14 @@ SOURCE=..\..\..\Windows\PropVariantConv.cpp
 # Begin Source File
 
 SOURCE=..\..\..\Windows\PropVariantConv.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Windows\PropVariantUtils.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Windows\PropVariantUtils.h
 # End Source File
 # Begin Source File
 
@@ -903,14 +915,6 @@ SOURCE=..\..\Compress\ImplodeDecoder.cpp
 
 SOURCE=..\..\Compress\ImplodeDecoder.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\..\Compress\ImplodeHuffmanDecoder.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\Compress\ImplodeHuffmanDecoder.h
-# End Source File
 # End Group
 # Begin Group "LZMA"
 
@@ -1108,18 +1112,6 @@ SOURCE=..\..\Compress\ShrinkDecoder.cpp
 SOURCE=..\..\Compress\ShrinkDecoder.h
 # End Source File
 # End Group
-# Begin Group "Z"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\Compress\ZDecoder.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\Compress\ZDecoder.h
-# End Source File
-# End Group
 # Begin Group "BWT"
 
 # PROP Default_Filter ""
@@ -1231,6 +1223,22 @@ SOURCE=..\..\Compress\LzOutWindow.cpp
 # Begin Source File
 
 SOURCE=..\..\Compress\LzOutWindow.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Compress\XzDecoder.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Compress\XzDecoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Compress\XzEncoder.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Compress\XzEncoder.h
 # End Source File
 # End Group
 # Begin Group "Archive"
@@ -1627,10 +1635,6 @@ SOURCE=..\..\Archive\SplitHandler.cpp
 # Begin Source File
 
 SOURCE=..\..\Archive\XzHandler.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\Archive\ZHandler.cpp
 # End Source File
 # End Group
 # Begin Group "UI Common"
@@ -2492,6 +2496,15 @@ SOURCE=..\..\..\..\C\Delta.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\C\DllSecur.c
+# SUBTRACT CPP /YX /Yc /Yu
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\C\DllSecur.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\C\HuffEnc.c
 
 !IF  "$(CFG)" == "Alone - Win32 Release"
@@ -2612,6 +2625,34 @@ SOURCE=..\..\..\..\C\Lzma2Dec.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\C\Lzma2DecMt.c
+
+!IF  "$(CFG)" == "Alone - Win32 Release"
+
+# ADD CPP /O2
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ELSEIF  "$(CFG)" == "Alone - Win32 Debug"
+
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ELSEIF  "$(CFG)" == "Alone - Win32 ReleaseU"
+
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ELSEIF  "$(CFG)" == "Alone - Win32 DebugU"
+
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\C\Lzma2DecMt.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\C\Lzma2Enc.c
 
 !IF  "$(CFG)" == "Alone - Win32 Release"
@@ -2721,6 +2762,34 @@ SOURCE=..\..\..\..\C\MtCoder.c
 # Begin Source File
 
 SOURCE=..\..\..\..\C\MtCoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\C\MtDec.c
+
+!IF  "$(CFG)" == "Alone - Win32 Release"
+
+# ADD CPP /O2
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ELSEIF  "$(CFG)" == "Alone - Win32 Debug"
+
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ELSEIF  "$(CFG)" == "Alone - Win32 ReleaseU"
+
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ELSEIF  "$(CFG)" == "Alone - Win32 DebugU"
+
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\C\MtDec.h
 # End Source File
 # Begin Source File
 
