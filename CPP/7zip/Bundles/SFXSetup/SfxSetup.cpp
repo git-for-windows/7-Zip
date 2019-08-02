@@ -168,7 +168,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
 		{
 			bool quoted = false;
 			
-			if (switches[0] == L'"')
+			if (switches[0] == L'"' || switches[1] == L'"')
 			{
 				quoted = true;
 				switches = switches.Ptr(3);
