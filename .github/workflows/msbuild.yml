@@ -1,0 +1,21 @@
+name: Build SFX bundle
+
+on: [push, pull_request]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: CPP/7zip/Bundles/SFXSetup/SFXSetup.sln
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2.0.0
+
+    - name: Build
+      working-directory: ${{ github.workspace }}
+      run: msbuild /m /p:Configuration=Release ${{ env.SOLUTION_FILE_PATH }}
