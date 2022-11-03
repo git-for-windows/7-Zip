@@ -7,7 +7,8 @@ env:
   SOLUTION_FILE_PATH: CPP/7zip/Bundles/SFXSetup/SFXSetup.sln
 
   # Configuration type to build.
-  BUILD_CONFIGURATION: Release
+  # Note: `ReleaseD` builds 7zSD.sfx (which links to MSVCRT.dll, as opposed to 7zS.sfx, which does not)
+  BUILD_CONFIGURATION: ReleaseD
 
 jobs:
   build:
@@ -27,4 +28,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: sfx-bundle
-        path: CPP/7zip/Bundles/SFXSetup/Release/7zS.sfx
+        path: CPP/7zip/Bundles/SFXSetup/${{env.BUILD_CONFIGURATION}}/7zSD.sfx
