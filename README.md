@@ -10,7 +10,7 @@ Git for Windows used the "modified SFX" instead of the one shipped with [the off
 * When canceling the installation, it is nice to be able to ask the user whether they are sure, and the modified SFX supports that.
 * The "modified SFX" allows to set the window title of the "BeginPrompt" window as well as the progress window.
 
-This fork supports those needs of the portable Git for Windows package. The `master` branch will always follow upstream 7-Zip's source code, while Git for Windows' modifications live in a branch based on the newest 7-Zip version (currently `v19.00-VS2019-sfx`) with the idea of rebasing the changes into a new branch whenever a new 7-Zip version comes out and then continue development on that new branch.
+This fork supports those needs of the portable Git for Windows package. The `master` branch will always follow upstream 7-Zip's source code, while Git for Windows' modifications live in a branch based on the newest 7-Zip version with the idea of rebasing the changes into a new branch whenever a new 7-Zip version comes out and then continue development on that new branch.
 
 Please note that this project does not aim for a full replacement of the "modified SFX" so far:
 
