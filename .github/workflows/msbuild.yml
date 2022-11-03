@@ -10,6 +10,19 @@ jobs:
   build:
     runs-on: windows-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+            # Note: `ReleaseD` builds 7zSD.sfx (which used to be linked to
+            # `msvcrt.dll` with older Visual C versions, but with recent ones
+            # links to `vcruntime140.dll`), as opposed to 7zS.sfx, which is
+            # linked statically.
+          - name: ReleaseD
+            artifact: 7zSD
+          - name: Release
+            artifact: 7zS
+
     steps:
     - uses: actions/checkout@v3
 
@@ -18,10 +31,10 @@ jobs:
 
     - name: Build
       working-directory: ${{ github.workspace }}
-      run: msbuild /m /p:Configuration=Release ${{ env.SOLUTION_FILE_PATH }}
+      run: msbuild /m /p:Configuration=${{ matrix.config.name }} ${{ env.SOLUTION_FILE_PATH }}
 
     - name: Upload SFX bundle
       uses: actions/upload-artifact@v3
       with:
-        name: sfx-bundle
-        path: CPP/7zip/Bundles/SFXSetup/Release/7zS.sfx
+        name: ${{ matrix.config.artifact }}
+        path: CPP/7zip/Bundles/SFXSetup/${{ matrix.config.name }}/${{ matrix.config.artifact }}.sfx
