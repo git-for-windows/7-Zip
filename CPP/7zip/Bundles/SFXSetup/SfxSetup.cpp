@@ -21,6 +21,8 @@
 
 #include "../../UI/Explorer/MyMessages.h"
 
+#include "../../UI/FileManager/ExtractPathDialog.h"
+
 #include "ExtractEngine.h"
 
 #include "../../../../C/DllSecur.h"
@@ -154,14 +156,59 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
   FString fullPath;
   NDLL::MyGetModuleFileName(fullPath);
 
-  switches.Trim();
   bool assumeYes = false;
-  if (switches.IsPrefixedBy_Ascii_NoCase("-y"))
+  UString installPath;
+  for (;;)
   {
-    assumeYes = true;
-    switches = switches.Ptr(2);
     switches.Trim();
-  }
+		if (switches.IsPrefixedBy_Ascii_NoCase("-y"))
+		{
+			assumeYes = true;
+			switches = switches.Ptr(2);
+		}
+		else if (switches.IsPrefixedBy_Ascii_NoCase("-o") || switches.IsPrefixedBy_Ascii_NoCase("\"-o") || switches.IsPrefixedBy_Ascii_NoCase("-\"o"))
+		{
+			bool quoted = false;
+			
+			if (switches[0] == L'"' || switches[1] == L'"')
+			{
+				quoted = true;
+				switches = switches.Ptr(3);
+			}
+			else
+			{
+				switches = switches.Ptr(2);
+				switches.Trim();
+			}
+
+
+			unsigned pos;
+			for (pos = 0; pos < switches.Len(); pos++)
+			{
+				wchar_t c = switches[pos];
+				if (c == L'"')
+				{
+					if (!quoted)
+						quoted = true;
+					else if (pos + 1 < switches.Len() && switches[pos + 1] == L'"')
+					{
+						installPath += L'"';
+						pos++;
+					}
+					else
+						quoted = false;
+					continue;
+				}
+
+				if (!quoted && (c == L' ' || c == L'\t'))
+					break;
+				installPath += switches[pos];
+			}
+			switches = switches.Ptr(pos);
+		}
+		else
+			break;
+	}
 
   AString config;
   if (!ReadDataString(fullPath, kStartID, kEndID, config))
@@ -172,7 +219,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
   }
 
   UString dirPrefix ("." STRING_PATH_SEPARATOR);
-  UString appLaunched;
+  UString appLaunched, extractDialogText, extractPath;
   bool showProgress = true;
   if (!config.IsEmpty())
   {
@@ -186,12 +233,51 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
     UString friendlyName = GetTextConfigValue(pairs, "Title");
     UString installPrompt = GetTextConfigValue(pairs, "BeginPrompt");
     UString progress = GetTextConfigValue(pairs, "Progress");
+    extractDialogText = GetTextConfigValue(pairs, "ExtractDialogText");
+    UString extractPathText = GetTextConfigValue(pairs, "ExtractPathText");
+    UString cancelPrompt = GetTextConfigValue(pairs, "CancelPrompt");
     if (progress.IsEqualTo_Ascii_NoCase("no"))
       showProgress = false;
     int index = FindTextConfigItem(pairs, "Directory");
     if (index >= 0)
       dirPrefix = pairs[index].String;
-    if (!installPrompt.IsEmpty() && !assumeYes)
+	if (installPath.IsEmpty())
+	  installPath = GetTextConfigValue(pairs, "InstallPath");
+
+	if (installPath.Find(L"%%S") >= 0)
+	{
+		FString s2 = fullPath;
+		int sep = s2.ReverseFind_PathSepar();
+		if (sep > 0) {
+			s2.DeleteFrom(sep + 1);
+			NName::NormalizeDirPathPrefix(s2);
+			sep = s2.Len();
+			if (sep > 0 && IS_PATH_SEPAR(s2[sep - 1]))
+				s2.DeleteFrom(sep - 1);
+		}
+		installPath.Replace(L"%%S", fs2us(s2));
+	}
+	extractPath = installPath;
+
+	if (!extractPathText.IsEmpty() && !assumeYes)
+    {
+      for (;;) {
+        CExtractPathDialog extractPathDialog;
+	    extractPathDialog.Title = friendlyName;
+	    extractPathDialog.Prompt = installPrompt;
+	    extractPathDialog.Label = extractPathText;
+        extractPathDialog.Value = extractPath;
+        if (extractPathDialog.Create(NULL) != IDOK) {
+          if (!cancelPrompt.IsEmpty() &&
+              MessageBoxW(0, cancelPrompt, friendlyName, MB_YESNO | MB_DEFBUTTON2) == IDNO)
+            continue;
+          return 5;
+        }
+        extractPath = extractPathDialog.Value;
+	    break;
+      }
+	}
+    else if (!installPrompt.IsEmpty() && !assumeYes)
     {
       if (MessageBoxW(0, installPrompt, friendlyName, MB_YESNO |
           MB_ICONQUESTION) != IDYES)
@@ -206,7 +292,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
   }
 
   CTempDir tempDir;
-  if (!tempDir.Create(kTempDirPrefix))
+  if (extractPath.IsEmpty() && !tempDir.Create(kTempDirPrefix))
   {
     if (!assumeYes)
       ShowErrorMessage(L"Cannot create temp folder archive");
@@ -224,13 +310,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
     }
   }
 
-  const FString tempDirPath = tempDir.GetPath();
+  const FString tempDirPath = extractPath.IsEmpty() ? tempDir.GetPath() : extractPath;
   // tempDirPath = L"M:\\1\\"; // to test low disk space
   {
     bool isCorrupt = false;
     UString errorMessage;
     HRESULT result = ExtractArchive(codecs, fullPath, tempDirPath, showProgress,
-      isCorrupt, errorMessage);
+      extractDialogText, isCorrupt, errorMessage);
     
     if (result != S_OK)
     {

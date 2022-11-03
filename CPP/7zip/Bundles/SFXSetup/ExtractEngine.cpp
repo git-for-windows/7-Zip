@@ -98,7 +98,7 @@ struct CThreadExtracting
 };
 
 HRESULT ExtractArchive(CCodecs *codecs, const FString &fileName, const FString &destFolder,
-    bool showProgress, bool &isCorrupt, UString &errorMessage)
+    bool showProgress, const UString &extractDialogText, bool &isCorrupt, UString &errorMessage)
 {
   isCorrupt = false;
   CThreadExtracting t;
@@ -119,7 +119,10 @@ HRESULT ExtractArchive(CCodecs *codecs, const FString &fileName, const FString &
     RINOK(thread.Create(CThreadExtracting::MyThreadFunction, &t));
     
     UString title;
-    LangString(IDS_PROGRESS_EXTRACTING, title);
+    if (extractDialogText.IsEmpty())
+        LangString(IDS_PROGRESS_EXTRACTING, title);
+    else
+        title = extractDialogText;
     t.ExtractCallbackSpec->StartProgressDialog(title, thread);
   }
   else
