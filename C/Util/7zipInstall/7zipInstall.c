@@ -43,9 +43,9 @@
 #define _7ZIP_CUR_VER ((MY_VER_MAJOR << 16) | MY_VER_MINOR)
 #define _7ZIP_DLL_VER_COMPAT ((16 << 16) | 3)
 
-static LPCSTR const k_7zip = "7-Zip";
+static LPCSTR const k_7zip = "7-Zip-Zstandard";
 
-static LPCWSTR const k_Reg_Software_7zip = L"Software\\7-Zip";
+static LPCWSTR const k_Reg_Software_7zip = L"Software\\7-Zip-Zstandard";
 
 // #define _64BIT_INSTALLER 1
 
@@ -53,7 +53,7 @@ static LPCWSTR const k_Reg_Software_7zip = L"Software\\7-Zip";
   #define _64BIT_INSTALLER 1
 #endif
 
-#define k_7zip_with_Ver_base L"7-Zip " LLL(MY_VERSION)
+#define k_7zip_with_Ver_base L"7-Zip ZS " LLL(MY_VERSION)
 
 #ifdef _64BIT_INSTALLER
 
@@ -103,7 +103,7 @@ static LPCWSTR const k_Reg_Path32 = L"Path"
   #define k_Reg_WOW_Flag_32 0
 #endif
 
-#define k_7zip_CLSID L"{23170F69-40C1-278A-1000-000100020000}"
+#define k_7zip_CLSID L"{23170F69-20BB-278A-1000-000100020000}"
 
 static LPCWSTR const k_Reg_CLSID_7zip = L"CLSID\\" k_7zip_CLSID;
 static LPCWSTR const k_Reg_CLSID_7zip_Inproc = L"CLSID\\" k_7zip_CLSID L"\\InprocServer32";
@@ -602,9 +602,9 @@ static LPCWSTR FindSubString(LPCWSTR s1, const char *s2)
 static void Set7zipPostfix(WCHAR *s)
 {
   NormalizePrefix(s);
-  if (FindSubString(s, "7-Zip"))
+  if (FindSubString(s, "7-Zip-Zstandard"))
     return;
-  CatAscii(s, "7-Zip\\");
+  CatAscii(s, "7-Zip-Zstandard\\");
 }
     
 
@@ -887,7 +887,7 @@ static void WriteShellEx()
   for (i = 0; i < ARRAY_SIZE(k_ShellEx_Items); i++)
   {
     CpyAscii(destPath, k_ShellEx_Items[i]);
-    CatAscii(destPath, "\\7-Zip");
+    CatAscii(destPath, "\\7-Zip-Zstandard");
 
     #ifdef USE_7ZIP_32_DLL
     MyRegistry_CreateKeyAndVal_32(HKEY_CLASSES_ROOT, destPath, NULL, k_7zip_CLSID);
@@ -918,7 +918,7 @@ static void WriteShellEx()
   
   {
     HKEY destKey = 0;
-    LONG res = MyRegistry_CreateKey(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\7-Zip", &destKey);
+    LONG res = MyRegistry_CreateKey(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\7-Zip-Zstandard", &destKey);
     if (res == ERROR_SUCCESS)
     {
       MyRegistry_SetString(destKey, L"DisplayName", k_7zip_with_Ver_str);

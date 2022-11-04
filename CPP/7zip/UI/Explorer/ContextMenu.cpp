@@ -194,9 +194,9 @@ HRESULT CZipContextMenu::InitContextMenu(const wchar_t * /* folder */, const wch
 /////////////////////////////
 // IContextMenu
 
-static LPCSTR const kMainVerb = "SevenZip";
-static LPCSTR const kOpenCascadedVerb = "SevenZip.OpenWithType.";
-static LPCSTR const kCheckSumCascadedVerb = "SevenZip.Checksum";
+static LPCSTR const kMainVerb = "SevenZipZS";
+static LPCSTR const kOpenCascadedVerb = "SevenZipZS.OpenWithType.";
+static LPCSTR const kCheckSumCascadedVerb = "SevenZipZS.Checksum";
 
 
 struct CContextMenuCommand
@@ -234,11 +234,20 @@ struct CHashCommand
 
 static const CHashCommand g_HashCommands[] =
 {
-  { CZipContextMenu::kHash_CRC32,  "CRC-32",  "CRC32" },
-  { CZipContextMenu::kHash_CRC64,  "CRC-64",  "CRC64" },
-  { CZipContextMenu::kHash_SHA1,   "SHA-1",   "SHA1" },
-  { CZipContextMenu::kHash_SHA256, "SHA-256", "SHA256" },
-  { CZipContextMenu::kHash_All,    "*",       "*" },
+  { CZipContextMenu::kHash_CRC32,    "CRC-32",   "CRC32" },
+  { CZipContextMenu::kHash_CRC64,    "CRC-64",   "CRC64" },
+  { CZipContextMenu::kHash_XXH32,    "XXH-32",   "XXH32" },
+  { CZipContextMenu::kHash_XXH64,    "XXH-64",   "XXH64" },
+  { CZipContextMenu::kHash_MD2,      "MD2",      "MD2" },
+  { CZipContextMenu::kHash_MD4,      "MD4",      "MD4" },
+  { CZipContextMenu::kHash_MD5,      "MD5",      "MD5" },
+  { CZipContextMenu::kHash_SHA1,     "SHA-1",    "SHA1" },
+  { CZipContextMenu::kHash_SHA256,   "SHA-256",  "SHA256" },
+  { CZipContextMenu::kHash_SHA384,   "SHA-384",  "SHA384" },
+  { CZipContextMenu::kHash_SHA512,   "SHA-512",  "SHA512" },
+  { CZipContextMenu::kHash_BLAKE2sp, "BLAKE2sp", "BLAKE2sp" },
+  { CZipContextMenu::kHash_BLAKE3,   "BLAKE3",   "BLAKE3" },
+  { CZipContextMenu::kHash_All,      "*",        "*" },
   { CZipContextMenu::kHash_Generate_SHA256, "SHA-256 -> file.sha256", "SHA256" },
   { CZipContextMenu::kHash_TestArc, "Checksum : Test", "Hash" }
 };
@@ -343,8 +352,13 @@ static const char * const kArcExts[] =
     "7z"
   , "bz2"
   , "gz"
+  , "lz"
+  , "liz"
+  , "lz4"
+  , "lz5"
   , "rar"
   , "zip"
+  , "zst"
 };
 
 static bool IsItArcExt(const UString &ext)
@@ -869,7 +883,7 @@ STDMETHODIMP CZipContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
     CMenu menu;
     menu.Attach(hMenu);
     menuDestroyer.Disable();
-    MyAddSubMenu(_commandMap, kMainVerb, menu, indexMenu++, currentCommandID++, (UString)"7-Zip",
+    MyAddSubMenu(_commandMap, kMainVerb, menu, indexMenu++, currentCommandID++, (UString)"7-Zip ZS",
         popupMenu, // popupMenu.Detach(),
         bitmap);
   }
@@ -890,7 +904,7 @@ STDMETHODIMP CZipContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
   {
     CMenu subMenu;
     // CMenuDestroyer menuDestroyer_CRC;
-
+    
     UINT subIndex_CRC = 0;
     
     if (!hMenu || subMenu.CreatePopup())
@@ -1202,11 +1216,20 @@ HRESULT CZipContextMenu::InvokeCommandCommon(const CCommandMapItem &cmi)
             );
         break;
       }
-      
+
       case kHash_CRC32:
       case kHash_CRC64:
+      case kHash_XXH32:
+      case kHash_XXH64:
+      case kHash_MD2:
+      case kHash_MD4:
+      case kHash_MD5:
       case kHash_SHA1:
       case kHash_SHA256:
+      case kHash_SHA384:
+      case kHash_SHA512:
+      case kHash_BLAKE2sp:
+      case kHash_BLAKE3:
       case kHash_All:
       case kHash_Generate_SHA256:
       case kHash_TestArc:
@@ -1237,7 +1260,7 @@ HRESULT CZipContextMenu::InvokeCommandCommon(const CCommandMapItem &cmi)
   }
   catch(...)
   {
-    ::MessageBoxW(0, L"Error", L"7-Zip", MB_ICONERROR);
+    ::MessageBoxW(0, L"Error", L"7-Zip ZS", MB_ICONERROR);
   }
   return S_OK;
 }

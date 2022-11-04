@@ -70,7 +70,7 @@ UI_COMMON_OBJS = \
   $O\DefaultName.obj \
   $O\EnumDirItems.obj \
   $O\ExtractingFilePath.obj \
-  $O\HashCalc.obj \
+  $O\HashCalc2.obj \
   $O\LoadCodecs.obj \
   $O\OpenArchive.obj \
   $O\PropIDUtils.obj \

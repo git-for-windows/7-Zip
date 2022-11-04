@@ -26,7 +26,7 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
-// static LPCWSTR const k_7zip = L"7-Zip";
+// static LPCWSTR const k_7zip = L"7-Zip-Zstandard";
 
 // #define _64BIT_INSTALLER 1
 
@@ -34,7 +34,7 @@
   #define _64BIT_INSTALLER 1
 #endif
 
-#define k_7zip_with_Ver_base L"7-Zip " LLL(MY_VERSION)
+#define k_7zip_with_Ver_base L"7-Zip ZS " LLL(MY_VERSION)
 
 #ifdef _64BIT_INSTALLER
 
@@ -59,7 +59,7 @@
 
 static LPCWSTR const k_7zip_with_Ver_Uninstall = k_7zip_with_Ver L" Uninstall";
 
-static LPCWSTR const k_Reg_Software_7zip = L"Software\\7-Zip";
+static LPCWSTR const k_Reg_Software_7zip = L"Software\\7-Zip-Zstandard";
 
 static LPCWSTR const k_Reg_Path = L"Path";
  
@@ -83,7 +83,7 @@ static LPCWSTR const k_Reg_Path32 = L"Path"
   #define k_Reg_WOW_Flag_32 0
 #endif
 
-#define k_7zip_CLSID L"{23170F69-40C1-278A-1000-000100020000}"
+#define k_7zip_CLSID L"{23170F69-20BB-278A-1000-000100020000}"
 
 static LPCWSTR const k_Reg_CLSID_7zip = L"CLSID\\" k_7zip_CLSID;
 static LPCWSTR const k_Reg_CLSID_7zip_Inproc = L"CLSID\\" k_7zip_CLSID L"\\InprocServer32";
@@ -356,7 +356,7 @@ static void SetShellProgramsGroup(HWND hwndOwner)
       continue;
 
     NormalizePrefix(link);
-    CatAscii(link, "7-Zip\\");
+    CatAscii(link, "7-Zip-Zstandard\\");
     
     {
       const size_t baseLen = wcslen(link);
@@ -405,7 +405,7 @@ static LPCWSTR const k_Shell_Approved = L"Software\\Microsoft\\Windows\\CurrentV
 
 static LPCWSTR const k_AppPaths_7zFm = L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\7zFM.exe";
 #define k_REG_Uninstall L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
-static LPCWSTR const k_Uninstall_7zip = k_REG_Uninstall L"7-Zip";
+static LPCWSTR const k_Uninstall_7zip = k_REG_Uninstall L"7-Zip-Zstandard";
 
 
 static void RemoveQuotes(wchar_t *s)
@@ -446,7 +446,7 @@ static void WriteCLSID()
         {
           WCHAR destPath[MAX_PATH];
           CpyAscii(destPath, k_ShellEx_Items[i]);
-          CatAscii(destPath, "\\7-Zip");
+          CatAscii(destPath, "\\7-Zip-Zstandard");
           
           MyRegistry_DeleteKey(HKEY_CLASSES_ROOT, destPath);
         }
@@ -483,7 +483,7 @@ static void WriteCLSID()
         {
           WCHAR destPath[MAX_PATH];
           CpyAscii(destPath, k_ShellEx_Items[i]);
-          CatAscii(destPath, "\\7-Zip");
+          CatAscii(destPath, "\\7-Zip-Zstandard");
           
           MyRegistry_DeleteKey_32(HKEY_CLASSES_ROOT, destPath);
         }

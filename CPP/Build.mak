@@ -51,7 +51,7 @@ COMPL_ASM = $(MY_ML) $** $O/$(*B).obj
 COMPL_ASM = $(MY_ML) -c -Fo$O/ $**
 !ENDIF
 
-CFLAGS = $(CFLAGS) -nologo -c -Fo$O/ -W4 -WX -EHsc -Gy -GR- -GF
+CFLAGS = $(CFLAGS) -nologo -c -Fo$O/ -W4 -WX -EHsc -Gy -MT -MP -GR- -GL -Gw
 
 !IF "$(CC)" == "clang-cl"
 
@@ -121,27 +121,17 @@ CFLAGS_O1 = $(CFLAGS) -O1
 !ELSE
 CFLAGS_O1 = $(CFLAGS) -O1
 !ENDIF
-CFLAGS_O2 = $(CFLAGS) -O2
+CFLAGS_O2 = $(CFLAGS) -O2 /Ob3
 
 LFLAGS = $(LFLAGS) -nologo -OPT:REF -OPT:ICF
 
 !IFNDEF UNDER_CE
-LFLAGS = $(LFLAGS) /LARGEADDRESSAWARE
+LFLAGS = $(LFLAGS) /LTCG /LARGEADDRESSAWARE
 !ENDIF
 
 !IFDEF DEF_FILE
 LFLAGS = $(LFLAGS) -DLL -DEF:$(DEF_FILE)
-!ELSE
-!IF defined(MY_FIXED) && "$(PLATFORM)" != "arm" && "$(PLATFORM)" != "arm64"
-LFLAGS = $(LFLAGS) /FIXED
-!ELSE
-LFLAGS = $(LFLAGS) /FIXED:NO
 !ENDIF
-# /BASE:0x400000
-!ENDIF
-
-
-# !IF "$(PLATFORM)" == "x64"
 
 !IFDEF SUB_SYS_VER
 
@@ -164,7 +154,6 @@ COMPL_PCH  = $(CC) $(CFLAGS_O1) -Yc"StdAfx.h" -Fp$O/a.pch $**
 COMPL      = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $**
 
 COMPLB    = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $<
-# COMPLB_O2 = $(CC) $(CFLAGS_O2) -Yu"StdAfx.h" -Fp$O/a.pch $<
 COMPLB_O2 = $(CC) $(CFLAGS_O2) $<
 
 CFLAGS_C_ALL = $(CFLAGS_O2) $(CFLAGS_C_SPEC)

@@ -1131,6 +1131,7 @@ static const char * const k_Formats_with_simple_signuature[] =
   , "rar"
   , "bzip2"
   , "gzip"
+  , "lzip"
   , "cab"
   , "wim"
   , "rpm"

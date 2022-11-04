@@ -27,6 +27,14 @@ OBJS = \
   $(COMPRESS_OBJS) \
   $(CRYPTO_OBJS) \
   $(C_OBJS) \
+  $(BROTLI_OBJS) \
+  $(HASHES_OBJS) \
+  $(LIZARD_OBJS) \
+  $(LZ4_OBJS) \
+  $(LZ5_OBJS) \
+  $(ZSTD_OBJS) \
+  $(ZSTDMT_OBJS) \
+  $(FASTLZMA2_OBJS) \
   $(ASM_OBJS) \
   $O\resource.res \
 
@@ -172,6 +180,41 @@ $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPL_O2)
 !ENDIF
 
+!IFDEF BROTLI_OBJS
+$(BROTLI_OBJS): ../../../../C/brotli/$(*B).c
+	$(COMPL_O2)
+!ENDIF
+
+!IFDEF LIZARD_OBJS
+$(LIZARD_OBJS): ../../../../C/lizard/$(*B).c
+	$(COMPL_O2)
+!ENDIF
+
+!IFDEF LZ4_OBJS
+$(LZ4_OBJS): ../../../../C/lz4/$(*B).c
+	$(COMPL_O2)
+!ENDIF
+
+!IFDEF LZ5_OBJS
+$(LZ5_OBJS): ../../../../C/lz5/$(*B).c
+	$(COMPL_O2)
+!ENDIF
+
+!IFDEF ZSTD_OBJS
+$(ZSTD_OBJS): ../../../../C/zstd/$(*B).c
+	$(COMPL_O2)
+!ENDIF
+
+!IFDEF ZSTDMT_OBJS
+$(ZSTDMT_OBJS): ../../../../C/zstdmt/$(*B).c
+	$(COMPL_O2)
+!ENDIF
+
+!IFDEF FASTLZMA2_OBJS
+$(FASTLZMA2_OBJS): ../../../../C/fast-lzma2/$(*B).c
+	$(COMPL_O2) -DNO_XXHASH -DFL2_7ZIP_BUILD
+!ENDIF
+
 
 !ELSE
 
@@ -229,11 +272,33 @@ $(C_OBJS): ../../../../C/$(*B).c
 	$(COMPLB)
 
 {../../Compress}.cpp{$O}.obj::
-	$(COMPLB_O2)
+	$(COMPLB)
 {../../Crypto}.cpp{$O}.obj::
-	$(COMPLB_O2)
+	$(CCOMPLB)
 {../../../../C}.c{$O}.obj::
 	$(CCOMPLB)
+{../../../../C/brotli}.c{$O}.obj::
+	$(CCOMPLB)
+{../../../../C/hashes}.c{$O}.obj::
+	$(CCOMPLB)
+{../../../../C/lizard}.c{$O}.obj::
+	$(CCOMPLB)
+{../../../../C/lz4}.c{$O}.obj::
+	$(CCOMPLB)
+{../../../../C/lz5}.c{$O}.obj::
+	$(CCOMPLB)
+{../../../../C/zstd}.c{$O}.obj::
+	$(CCOMPLB)
+{../../../../C/zstdmt}.c{$O}.obj::
+	$(CCOMPLB) \
+	-I ../../../../C/brotli \
+	-I ../../../../C/hashes \
+	-I ../../../../C/lizard \
+	-I ../../../../C/lz4 \
+	-I ../../../../C/lz5 \
+	-I ../../../../C/zstd
+{../../../../C/fast-lzma2}.c{$O}.obj::
+	$(CCOMPLB) -DNO_XXHASH -DFL2_7ZIP_BUILD
 
 !ENDIF
 

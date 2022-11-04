@@ -26,15 +26,15 @@
 
 #include "ContextMenu.h"
 
-static LPCTSTR const k_ShellExtName = TEXT("7-Zip Shell Extension");
+static LPCTSTR const k_ShellExtName = TEXT("7-Zip ZS Shell Extension");
 static LPCTSTR const k_Approved = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved");
 
 // {23170F69-40C1-278A-1000-000100020000}
-static LPCTSTR const k_Clsid = TEXT("{23170F69-40C1-278A-1000-000100020000}");
+static LPCTSTR const k_Clsid = TEXT("{23170F69-20BB-278A-1000-000100020000}");
 
 DEFINE_GUID(CLSID_CZipContextMenu,
     k_7zip_GUID_Data1,
-    k_7zip_GUID_Data2,
+    k_7zip_GUID_Data2_ZS,
     k_7zip_GUID_Data3_Common,
     0x10, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00);
 

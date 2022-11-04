@@ -17,6 +17,10 @@
 #include "../../Archive/Common/ItemNameUtils.h"
 #include "../../Archive/IArchive.h"
 
+#ifdef WANT_OPTIONAL_LOWERCASE
+#include "../FileManager/RegistryUtils.h"
+#endif
+
 #include "EnumDirItems.h"
 #include "HashCalc.h"
 
@@ -647,6 +651,12 @@ HRESULT HashCalc(
 
 static inline char GetHex_Upper(unsigned v)
 {
+#ifdef WANT_OPTIONAL_LOWERCASE
+  if (WantLowercaseHashes())
+  {
+    return (char)((v < 10) ? ('0' + v) : ('a' + (v - 10)));
+  }
+#endif
   return (char)((v < 10) ? ('0' + v) : ('A' + (v - 10)));
 }
 

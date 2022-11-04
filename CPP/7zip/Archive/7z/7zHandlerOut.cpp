@@ -21,7 +21,7 @@ namespace NArchive {
 namespace N7z {
 
 #define k_LZMA_Name "LZMA"
-#define kDefaultMethodName "LZMA2"
+#define kDefaultMethodName "zstd"
 #define k_Copy_Name "Copy"
 
 #define k_MatchFinder_ForHeaders "BT2"
@@ -727,7 +727,8 @@ STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numIt
   options.Method = &methodMode;
   options.HeaderMethod = (_compressHeaders || encryptHeaders) ? &headerMethod : NULL;
   options.UseFilters = (level != 0 && _autoFilter && !methodMode.Filter_was_Inserted);
-  options.MaxFilter = (level >= 8);
+  // use BCJ for all levels, BCJ2 uses LZMA2! /TR 2016-03-03
+  // options.MaxFilter = (level >= 8);
   options.AnalysisLevel = GetAnalysisLevel();
 
   options.HeaderOptions.CompressMainHeader = compressMainHeader;

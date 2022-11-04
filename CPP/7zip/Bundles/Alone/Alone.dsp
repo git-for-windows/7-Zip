@@ -1674,6 +1674,10 @@ SOURCE=..\..\Archive\IArchive.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\Archive\LzHandler.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\Archive\LzmaHandler.cpp
 # End Source File
 # Begin Source File

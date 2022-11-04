@@ -19,7 +19,8 @@ static const UInt32 kLangIDs[] =
   IDT_ABOUT_INFO
 };
 
-#define kHomePageURL TEXT("https://www.7-zip.org/")
+#define kHomePageURL  TEXT("https://www.7-zip.org/")
+#define kHomePageURL2 TEXT("https://github.com/mcmilk/7-Zip-zstd/")
 #define kHelpTopic "start.htm"
 
 #define LLL_(quote) L##quote
@@ -59,19 +60,16 @@ bool CAboutDialog::OnButtonClicked(int buttonID, HWND buttonHWND)
   switch (buttonID)
   {
     case IDB_ABOUT_HOMEPAGE: url = kHomePageURL; break;
+    case IDB_ABOUT_HOMEPAGE2: url = kHomePageURL2; break;
     default:
       return CModalDialog::OnButtonClicked(buttonID, buttonHWND);
   }
 
-  #ifdef UNDER_CE
   SHELLEXECUTEINFO s;
   memset(&s, 0, sizeof(s));
   s.cbSize = sizeof(s);
   s.lpFile = url;
   ::ShellExecuteEx(&s);
-  #else
-  ::ShellExecute(NULL, NULL, url, NULL, NULL, SW_SHOWNORMAL);
-  #endif
 
   return true;
 }

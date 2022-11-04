@@ -172,6 +172,11 @@ Handler GUIDs:
   0B lzma86
   0C xz
   0D ppmd
+  0E zstd
+  0F lz4
+  10 lz5
+  11 liz
+  12 Lzip
 
   C0 AVB
   C1 LP

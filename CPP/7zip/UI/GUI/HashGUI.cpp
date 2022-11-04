@@ -315,7 +315,7 @@ HRESULT HashCalcGUI(
 
   const UString title = LangString(IDS_CHECKSUM_CALCULATING);
 
-  t.MainTitle = "7-Zip"; // LangString(IDS_APP_TITLE);
+  t.MainTitle = "7-Zip ZS"; // LangString(IDS_APP_TITLE);
   t.MainAddTitle = title;
   t.MainAddTitle.Add_Space();
 

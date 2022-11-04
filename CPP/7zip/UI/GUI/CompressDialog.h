@@ -48,6 +48,7 @@ namespace NCompressDialog
     bool OrderMode;
     UInt32 Order;
     UString Options;
+    UString SplitVolume;
 
     UString EncryptionMethod;
 
@@ -96,6 +97,7 @@ namespace NCompressDialog
       OrderMode = false;
       Method.Empty();
       Options.Empty();
+      SplitVolume.Empty();
       EncryptionMethod.Empty();
       TimePrec = (UInt32)(Int32)(-1);
     }
