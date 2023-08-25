@@ -93,6 +93,10 @@
       <ObjectFileName>.\ReleaseD\</ObjectFileName>
       <ProgramDataBaseFileName>.\ReleaseD\</ProgramDataBaseFileName>
       <CallingConvention>StdCall</CallingConvention>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -113,6 +117,8 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>comctl32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -174,6 +180,10 @@
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
       <CallingConvention>StdCall</CallingConvention>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -194,9 +204,12 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>comctl32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ResourceCompile Include="..\..\UI\FileManager\ExtractPathDialog.rc" />
     <ResourceCompile Include="resource.rc" />
   </ItemGroup>
   <ItemGroup>
@@ -355,6 +368,7 @@
     <ClCompile Include="..\..\..\Windows\FileName.cpp" />
     <ClCompile Include="..\..\..\Windows\PropVariant.cpp" />
     <ClCompile Include="..\..\..\Windows\ResourceString.cpp" />
+    <ClCompile Include="..\..\..\Windows\Shell.cpp" />
     <ClCompile Include="..\..\..\Windows\Synchronization.cpp" />
     <ClCompile Include="..\..\..\Windows\System.cpp" />
     <ClCompile Include="..\..\..\Windows\Window.cpp" />
@@ -397,6 +411,7 @@
     <ClCompile Include="..\..\UI\Common\LoadCodecs.cpp" />
     <ClCompile Include="..\..\UI\Common\OpenArchive.cpp" />
     <ClCompile Include="..\..\UI\Explorer\MyMessages.cpp" />
+    <ClCompile Include="..\..\UI\FileManager\ExtractPathDialog.cpp" />
     <ClCompile Include="..\..\UI\FileManager\FormatUtils.cpp" />
     <ClCompile Include="..\..\UI\FileManager\ProgressDialog.cpp" />
     <ClCompile Include="ExtractCallbackSfx.cpp" />
@@ -447,6 +462,7 @@
     <ClInclude Include="..\..\..\Windows\FileName.h" />
     <ClInclude Include="..\..\..\Windows\PropVariant.h" />
     <ClInclude Include="..\..\..\Windows\ResourceString.h" />
+    <ClInclude Include="..\..\..\Windows\Shell.h" />
     <ClInclude Include="..\..\..\Windows\Synchronization.h" />
     <ClInclude Include="..\..\..\Windows\System.h" />
     <ClInclude Include="..\..\..\Windows\Window.h" />
@@ -483,6 +499,8 @@
     <ClInclude Include="..\..\UI\Common\LoadCodecs.h" />
     <ClInclude Include="..\..\UI\Common\OpenArchive.h" />
     <ClInclude Include="..\..\UI\Explorer\MyMessages.h" />
+    <ClInclude Include="..\..\UI\FileManager\ExtractPathDialog.h" />
+    <ClInclude Include="..\..\UI\FileManager\ExtractPathDialogRes.h" />
     <ClInclude Include="..\..\UI\FileManager\FormatUtils.h" />
     <ClInclude Include="..\..\UI\FileManager\LangUtils.h" />
     <ClInclude Include="..\..\UI\FileManager\ProgressDialog.h" />
