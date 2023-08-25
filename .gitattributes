@@ -1,0 +1,9 @@
+* -text
+*.bmp -text
+*.ico -text
+.gitattributes text eol=lf
+.gitignore text eol=lf
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.vcxproj.user text eol=crlf
