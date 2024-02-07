@@ -34,7 +34,7 @@ jobs:
       run: msbuild /m /p:Configuration=${{ matrix.config.name }} ${{ env.SOLUTION_FILE_PATH }}
 
     - name: Upload SFX bundle
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.config.artifact }}
         path: CPP/7zip/Bundles/SFXSetup/${{ matrix.config.name }}/${{ matrix.config.artifact }}.sfx
